@@ -7,7 +7,9 @@
 |[exp002_l1_loss]|5.136|10.924||
 |[exp003_emb_layer]|5.004|10.677||
 |[exp004_lr]|0.616|0.992||
-|[exp005_cos]||||
+|[exp005_cos]|0.623|1.040||
+|[exp006_bilstm]||||
+
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
 [exp001_u_in_time]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75511345
@@ -15,6 +17,7 @@
 [exp003_emb_layer]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75531233
 [exp004_lr]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75576040
 [exp005_cos]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75581766
+[exp006_bilstm]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75668583
 
 ## ToDo
 
