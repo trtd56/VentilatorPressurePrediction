@@ -11,7 +11,7 @@
 |[exp006_bilstm]|0.568|0.884||
 |[exp007_init]|0.623|0.723||
 |[exp008_head]|0.425|0.626||
-
+|[exp009_mask]||||
 
 
 
@@ -24,11 +24,11 @@
 [exp006_bilstm]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75668583
 [exp007_init]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75668583
 [exp008_head]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter/script?scriptVersionId=75744079
+[exp009_mask]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75759098
 
 ## ToDo
 
 
 - [Best Starter](https://www.kaggle.com/yasufuminakama/ventilator-pressure-lstm-starter/notebook)の再現
-  - embed
-  - loss mask (u_out==0) 
+  - embed 
 - Transformer
