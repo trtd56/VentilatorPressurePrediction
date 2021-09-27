@@ -29,4 +29,6 @@
 
 
 - [Best Starter](https://www.kaggle.com/yasufuminakama/ventilator-pressure-lstm-starter/notebook)の再現
+  - embed
+  - loss mask (u_out==0) 
 - Transformer
