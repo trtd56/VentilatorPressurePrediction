@@ -11,9 +11,10 @@
 |[exp006_bilstm]|0.568|0.884||
 |[exp007_init]|0.623|0.723||
 |[exp008_head]|0.425|0.626||
-|[exp009_mask]||||
-
-
+|[exp009_mask]|||wandb削除しちゃってエラー|
+|[exp010_transformer]|||微妙なのでf0で止めた|
+|||||
+|[exp011_def]|||ここからcolab|
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
 [exp001_u_in_time]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75511345
@@ -25,6 +26,9 @@
 [exp007_init]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75668583
 [exp008_head]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter/script?scriptVersionId=75744079
 [exp009_mask]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75759098
+[exp010_transformer]:https://www.kaggle.com/takamichitoda/ventilator-transformer-starter?scriptVersionId=75829880
+
+[exp011_def]:xxx
 
 ## ToDo
 
