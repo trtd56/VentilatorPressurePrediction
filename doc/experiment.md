@@ -30,9 +30,14 @@
 
 [exp011_def]:https://github.com/trtd56/VentilatorPressurePrediction/blob/016f42ac7a5890f18407d6a42a04cd66b8555e49/src/ventilatorlstm.py
 
+## Transformer実験
+
+|name|result|
+|--|--|
+|exp011_simple_head|２層にしたときより良い|
+|exp011_fnn512|微妙|
+|exp011_layer1|若干改善|
+|exp011_norm||
+
 ## ToDo
 
-
-- [Best Starter](https://www.kaggle.com/yasufuminakama/ventilator-pressure-lstm-starter/notebook)の再現
-  - embed 
-- Transformer
