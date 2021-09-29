@@ -54,12 +54,12 @@ from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts, CosineAnnealin
 
 from transformers import AdamW
 from transformers import get_linear_schedule_with_warmup, get_cosine_schedule_with_warmup
-
+from sklearn.preprocessing import RobustScaler
 
 device = torch.device("cuda")
 
 class config:
-    EXP_NAME = "exp011_def"
+    EXP_NAME = "exp014_transformer_head"
     
     INPUT = "/content/"
     OUTPUT = "/content/drive/MyDrive/Study/ventilator-pressure-prediction"
@@ -69,7 +69,7 @@ class config:
     LR = 5e-3
     N_EPOCHS = 50
     HIDDEN_SIZE = 64
-    BS = 256
+    BS = 512
     WEIGHT_DECAY = 1e-5
     T_MAX = 50
     MIN_LR = 1e-6
@@ -97,7 +97,8 @@ class VentilatorDataset(Dataset):
     def __getitem__(self, item):
         df = self.dfs[item]
         
-        X = df[['R_cate', 'C_cate', 'u_in', 'u_out'] + ['time_step', 'breath_time', 'u_in_time']].values
+        X = df[['R_cate', 'C_cate', 'u_in', 'u_out'] + ['time_step', 'breath_time', 'u_in_time', 'u_in_lag_1', 'u_in_lag_2']].values
+        #X = df[['R_cate', 'C_cate', 'u_in', 'u_out']].values
         y = df['pressure'].values
         d = {
             "X": torch.tensor(X).float(),
@@ -133,22 +134,26 @@ class VentilatorModel(nn.Module):
         self.r_emb = nn.Embedding(3, 2, padding_idx=0)
         self.c_emb = nn.Embedding(3, 2, padding_idx=0)
         self.seq_emb = nn.Sequential(
-            nn.Linear(9, config.HIDDEN_SIZE),
+            nn.Linear(11, config.HIDDEN_SIZE),
             nn.LayerNorm(config.HIDDEN_SIZE),
             nn.ReLU(),
             nn.Dropout(0.2),
         )
-        self.pos_encoder = PositionalEncoding(d_model=config.HIDDEN_SIZE, dropout=0.2)
-        encoder_layers = nn.TransformerEncoderLayer(d_model=config.HIDDEN_SIZE, nhead=8, dim_feedforward=2048, dropout=0.2, batch_first=True)
-        self.transformer_encoder = nn.TransformerEncoder(encoder_layers, num_layers=2)
-        # self.lstm = nn.LSTM(config.HIDDEN_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
+        
+        self.lstm1 = nn.LSTM(config.HIDDEN_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
+        self.lstm2 = nn.LSTM(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
+        self.lstm3 = nn.LSTM(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
+        
+        self.pos_encoder = PositionalEncoding(d_model=config.HIDDEN_SIZE * 2, dropout=0.2)
+        encoder_layers = nn.TransformerEncoderLayer(d_model=config.HIDDEN_SIZE * 2, nhead=1, dim_feedforward=2048, dropout=0.2, batch_first=True)
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layers, num_layers=1)
 
         self.head = nn.Sequential(
-            nn.Linear(config.HIDDEN_SIZE * 1, config.HIDDEN_SIZE * 1),
-            nn.LayerNorm(config.HIDDEN_SIZE * 1),
+            nn.Linear(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE * 2),
+            nn.LayerNorm(config.HIDDEN_SIZE * 2),
             nn.ReLU(),
             nn.Dropout(0.),
-            nn.Linear(config.HIDDEN_SIZE * 1, 1),
+            nn.Linear(config.HIDDEN_SIZE * 2, 1),
         )
         
         # Encoder
@@ -172,9 +177,14 @@ class VentilatorModel(nn.Module):
         c_emb = self.c_emb(X[:,:,1].long()).view(bs, 80, -1)
         seq_x = torch.cat((r_emb, c_emb, X[:, :, 2:]), 2)
         h = self.seq_emb(seq_x)
+        
+        h, (hn, cn) = self.lstm1(h, None)
+        h, (hn, cn) = self.lstm2(h, (hn, cn))
+        h, _ = self.lstm3(h, (hn, cn))
+
         h = self.pos_encoder(h)
         h = self.transformer_encoder(h)
-        #h, _ = self.lstm(h, None)
+        
         regr = self.head(h)
         
         if y is None:
@@ -237,125 +247,11 @@ def add_feature(df):
     # u_in_time
     df['u_in_time'] = df['u_in'] - df['u_in'].shift(1)
     # lag
-    #df['u_in_lag_1'] = df['u_in'].shift(1)
-    #df['u_in_lag_2'] = df['u_in'].shift(2)
+    df['u_in_lag_1'] = df['u_in'].shift(1)
+    df['u_in_lag_2'] = df['u_in'].shift(2)
     # fill na by zero
     df = df.fillna(0)
     return df
-
-from torch.optim.optimizer import Optimizer
-class Lamb(Optimizer):
-    # Reference code: https://github.com/cybertronai/pytorch-lamb
-
-    def __init__(
-        self,
-        params,
-        lr: float = 1e-3,
-        betas = (0.9, 0.999),
-        eps: float = 1e-6,
-        weight_decay: float = 0,
-        clamp_value: float = 10,
-        adam: bool = False,
-        debias: bool = False,
-    ):
-        if lr <= 0.0:
-            raise ValueError('Invalid learning rate: {}'.format(lr))
-        if eps < 0.0:
-            raise ValueError('Invalid epsilon value: {}'.format(eps))
-        if not 0.0 <= betas[0] < 1.0:
-            raise ValueError(
-                'Invalid beta parameter at index 0: {}'.format(betas[0])
-            )
-        if not 0.0 <= betas[1] < 1.0:
-            raise ValueError(
-                'Invalid beta parameter at index 1: {}'.format(betas[1])
-            )
-        if weight_decay < 0:
-            raise ValueError(
-                'Invalid weight_decay value: {}'.format(weight_decay)
-            )
-        if clamp_value < 0.0:
-            raise ValueError('Invalid clamp value: {}'.format(clamp_value))
-
-        defaults = dict(lr=lr, betas=betas, eps=eps, weight_decay=weight_decay)
-        self.clamp_value = clamp_value
-        self.adam = adam
-        self.debias = debias
-
-        super(Lamb, self).__init__(params, defaults)
-
-    def step(self, closure = None):
-        loss = None
-        if closure is not None:
-            loss = closure()
-
-        for group in self.param_groups:
-            for p in group['params']:
-                if p.grad is None:
-                    continue
-                grad = p.grad.data
-                if grad.is_sparse:
-                    msg = (
-                        'Lamb does not support sparse gradients, '
-                        'please consider SparseAdam instead'
-                    )
-                    raise RuntimeError(msg)
-
-                state = self.state[p]
-
-                # State initialization
-                if len(state) == 0:
-                    state['step'] = 0
-                    # Exponential moving average of gradient values
-                    state['exp_avg'] = torch.zeros_like(
-                        p, memory_format=torch.preserve_format
-                    )
-                    # Exponential moving average of squared gradient values
-                    state['exp_avg_sq'] = torch.zeros_like(
-                        p, memory_format=torch.preserve_format
-                    )
-
-                exp_avg, exp_avg_sq = state['exp_avg'], state['exp_avg_sq']
-                beta1, beta2 = group['betas']
-
-                state['step'] += 1
-
-                # Decay the first and second moment running average coefficient
-                # m_t
-                exp_avg.mul_(beta1).add_(grad, alpha=1 - beta1)
-                # v_t
-                exp_avg_sq.mul_(beta2).addcmul_(grad, grad, value=1 - beta2)
-
-                # Paper v3 does not use debiasing.
-                if self.debias:
-                    bias_correction = math.sqrt(1 - beta2 ** state['step'])
-                    bias_correction /= 1 - beta1 ** state['step']
-                else:
-                    bias_correction = 1
-
-                # Apply bias to lr to avoid broadcast.
-                step_size = group['lr'] * bias_correction
-
-                weight_norm = torch.norm(p.data).clamp(0, self.clamp_value)
-
-                adam_step = exp_avg / exp_avg_sq.sqrt().add(group['eps'])
-                if group['weight_decay'] != 0:
-                    adam_step.add_(p.data, alpha=group['weight_decay'])
-
-                adam_norm = torch.norm(adam_step)
-                if weight_norm == 0 or adam_norm == 0:
-                    trust_ratio = 1
-                else:
-                    trust_ratio = weight_norm / adam_norm
-                state['weight_norm'] = weight_norm
-                state['adam_norm'] = adam_norm
-                state['trust_ratio'] = trust_ratio
-                if self.adam:
-                    trust_ratio = 1
-
-                p.data.add_(adam_step, alpha=-step_size * trust_ratio)
-
-        return loss
 
 def main():
     
@@ -375,6 +271,17 @@ def main():
     test_df['R_cate'] = test_df['R'].map({5: 0, 20: 1, 50:2})
     train_df = add_feature(train_df)
     test_df = add_feature(test_df)
+
+    '''
+    scaler = RobustScaler()
+    all_u_in = np.hstack([train_df['u_in'].values, test_df['u_in'].values])
+    scaler.fit(all_u_in.reshape(-1, 1))
+    train_df['u_in_norm'] = scaler.transform(train_df['u_in'].values.reshape(-1, 1))[:, 0]
+    test_df['u_in_norm'] = scaler.transform(test_df['u_in'].values.reshape(-1, 1))[:, 0]
+
+    train_df['time_step_norm'] = train_df['time_step'] / 3
+    test_df['time_step_norm'] = test_df['time_step'] / 3
+    '''
 
     test_df['pressure'] = -1
     test_dset = VentilatorDataset(test_df)
@@ -397,7 +304,6 @@ def main():
         model.to(device)
 
         optimizer = AdamW(model.parameters(), lr=config.LR, weight_decay=config.WEIGHT_DECAY)
-        #optimizer = Lamb(model.parameters(), lr=config.LR, weight_decay=config.WEIGHT_DECAY)
         scheduler = CosineAnnealingLR(optimizer, T_max=config.T_MAX, eta_min=config.MIN_LR, last_epoch=-1)
 
         uniqe_exp_name = f"{config.EXP_NAME}_f{fold}"
@@ -415,8 +321,6 @@ def main():
         
         valid_best_score = float('inf')
         for epoch in tqdm(range(config.N_EPOCHS)):
-        #for epoch in range(config.N_EPOCHS):
-
             train_loss, lrs = train_loop(model, optimizer, scheduler, train_loader)
             valid_loss, valid_predict = valid_loop(model, valid_loader)
             valid_score = np.abs(valid_predict - train_df.query(f"fold=={fold}")['pressure'].values).mean()
@@ -457,3 +361,4 @@ if __name__ == "__main__":
     main()
 
 wandb.finish()
+
