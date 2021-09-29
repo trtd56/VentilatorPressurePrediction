@@ -17,7 +17,7 @@
 |[exp011_def]|||ここからcolab|
 |exp011_lstm2|0.353|0.484||
 |exp011_lstm3|0.355|0.464||
-|exp012_lstm3_fix|||fold-0 LB: 0.532→|
+|exp012_lstm3_fix|||fold-0 LB: 0.532→0.537|
 |[exp013_1dcnn_lstm]|||fold-0のLB=0.740|
 |[exp013_cnn_head]||||
 
