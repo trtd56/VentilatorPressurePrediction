@@ -16,7 +16,7 @@
 |||||
 |[exp011_def]|||ここからcolab|
 |exp011_lstm2|0.353|0.484||
-|exp011_lstm3||||
+|exp011_lstm3|0.355|||
 |[exp013_1dcnn_lstm]||||
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
