@@ -16,7 +16,8 @@
 |||||
 |[exp011_def]|||ここからcolab|
 |exp011_lstm2|0.353|0.484||
-
+|exp011_lstm3||||
+|[exp013_1dcnn_lstm]||||
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
 [exp001_u_in_time]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75511345
@@ -32,14 +33,7 @@
 
 [exp011_def]:https://github.com/trtd56/VentilatorPressurePrediction/blob/016f42ac7a5890f18407d6a42a04cd66b8555e49/src/ventilatorlstm.py
 
-## Transformer実験
-
-|name|result|
-|--|--|
-|exp011_simple_head|２層にしたときより良い|
-|exp011_fnn512|微妙|
-|exp011_layer1|若干改善|
-|exp011_norm||
+[exp013_1dcnn_lstm]:https://www.kaggle.com/takamichitoda/ventilator-1dcnn-lstm?scriptVersionId=75942298
 
 ## ToDo
 - outを別特徴として連結
