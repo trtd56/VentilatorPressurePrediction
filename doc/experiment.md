@@ -20,7 +20,7 @@
 |exp012_lstm3_fix|||fold-0 LB: 0.532→0.537|
 |[exp013_1dcnn_lstm]|||fold-0のLB=0.740|
 |[exp013_cnn_head]||||
-|[exp014_transformer_head]||||
+|[exp014_transformer_head]|||fold-0 LB: 0.537|
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
 [exp001_u_in_time]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75511345
