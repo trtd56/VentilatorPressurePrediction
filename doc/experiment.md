@@ -44,3 +44,5 @@
 
 ## ToDo
 - outを別特徴として連結
+- out==1は使われてないっぽい？
+- TabTransformer: https://arxiv.org/pdf/2012.06678.pdf
