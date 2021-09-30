@@ -23,7 +23,7 @@
 |[exp014_transformer_head]|||fold-0 LB: 0.537|
 |exp015_skip_conn|0.364|0.493||
 |exp016_lstm4|0.334|0.435||
-|exp017_h256||||
+|exp017_h256|0.273|0.323||
 |exp018_h512||||
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
