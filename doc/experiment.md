@@ -24,7 +24,9 @@
 |exp015_skip_conn|0.364|0.493||
 |exp016_lstm4|0.334|0.435||
 |exp017_h256|0.273|0.323||
-|exp018_h512||||
+|exp018_h512|||fold-0で微妙|
+|exp019_transformer_lstm|||やっぱ良くない|
+|exp020_liner_sche_f0||||
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
 [exp001_u_in_time]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75511345
@@ -46,4 +48,3 @@
 - outを別特徴として連結
 - out==1は使われてないっぽい？
 - TabTransformer: https://arxiv.org/pdf/2012.06678.pdf
-- scheduler
