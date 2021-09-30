@@ -26,7 +26,7 @@
 |exp017_h256|0.273|0.323||
 |exp018_h512|||fold-0で微妙|
 |exp019_transformer_lstm|||やっぱ良くない|
-|exp020_liner_sche_f0||||
+|exp020_liner_sche_f0|0.218|0.247||
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
 [exp001_u_in_time]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75511345
