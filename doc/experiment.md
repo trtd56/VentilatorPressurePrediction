@@ -51,6 +51,13 @@
 [exp022_cos]:https://github.com/trtd56/VentilatorPressurePrediction/blob/565e0de4231d86b7af88a349e3ec03c1abc379c4/src/ventilatorlstm.py
 [exp023_1dcnn]:https://www.kaggle.com/takamichitoda/ventilator-1dcnn-lstm?scriptVersionId=76092602
 
+
+## n_out
+fold-0
+|method|OOF|OOF mask|LB|
+|--|--|--|--|
+|maskなし|0.204||0.253|
+
 ## ToDo
 - outを別特徴として連結
 - out==1は使われてないっぽい？
