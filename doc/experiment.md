@@ -30,7 +30,8 @@
 |exp020_add_feat|||normすれば良さそう|
 |[exp022_cos]|0.212|0.244||
 |[exp023_1dcnn]||||
-|exp024_mask2||||
+|exp024_mask2|||以下参照|
+|exp025_con_out||||
 
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
@@ -57,7 +58,7 @@ fold-0
 |method|OOF|OOF mask|LB|
 |--|--|--|--|
 |maskなし|0.204|0.253|0.253|
-|maskあり||||
+|maskあり|0.215|0.255|0.257|
 
 ## ToDo
 - outを別特徴として連結
