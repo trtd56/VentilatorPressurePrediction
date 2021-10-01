@@ -29,7 +29,7 @@
 |exp020_liner_sche_f0|0.218|0.247||
 |exp020_add_feat|||normすれば良さそう|
 |[exp022_cos]||||
-|exp023_1dcnn_f0||||
+|[exp023_1dcnn]||||
 
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
@@ -48,8 +48,8 @@
 [exp013_cnn_head]:https://www.kaggle.com/takamichitoda/ventilator-1dcnn-lstm?scriptVersionId=75945718
 [exp014_transformer_head]:https://github.com/trtd56/VentilatorPressurePrediction/blob/b91c64ededd01c53453c5fa1b32321019f624496/src/ventilatorlstm.py
 [exp022_cos]:https://github.com/trtd56/VentilatorPressurePrediction/blob/565e0de4231d86b7af88a349e3ec03c1abc379c4/src/ventilatorlstm.py
+[exp023_1dcnn]:https://www.kaggle.com/takamichitoda/ventilator-1dcnn-lstm?scriptVersionId=76092602
 
 ## ToDo
 - outを別特徴として連結
 - out==1は使われてないっぽい？
-- TabTransformer: https://arxiv.org/pdf/2012.06678.pdf
