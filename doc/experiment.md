@@ -29,7 +29,7 @@
 |exp020_liner_sche_f0|0.218|0.247||
 |exp020_add_feat|||normすれば良さそう|
 |[exp022_cos]|0.212|0.244||
-|[exp023_1dcnn]||||
+|[exp023_1dcnn]|0.387|||
 |exp024_mask2|||以下参照|
 |exp025_con_out||||
 
@@ -59,6 +59,7 @@ fold-0
 |--|--|--|--|
 |maskなし|0.204|0.253|0.253|
 |maskあり|0.215|0.255|0.257|
+|concat||||
 
 ## ToDo
 - 1dcnn, dilation, https://arxiv.org/pdf/1803.01271.pdf
