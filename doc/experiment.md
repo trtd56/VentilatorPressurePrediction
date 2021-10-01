@@ -19,8 +19,14 @@
 |exp011_lstm3|0.355|0.464||
 |exp012_lstm3_fix|||fold-0 LB: 0.532→0.537|
 |[exp013_1dcnn_lstm]|||fold-0のLB=0.740|
-|[exp013_cnn_head]||||
-|[exp014_transformer_head]||||
+|[exp013_cnn_head]||0.681||
+|[exp014_transformer_head]|||fold-0 LB: 0.537|
+|exp015_skip_conn|0.364|0.493||
+|exp016_lstm4|0.334|0.435||
+|exp017_h256|0.273|0.323||
+|exp018_h512|||fold-0で微妙|
+|exp019_transformer_lstm|||やっぱ良くない|
+|exp020_liner_sche_f0|0.218|0.247||
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
 [exp001_u_in_time]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75511345
@@ -36,7 +42,9 @@
 [exp011_def]:https://github.com/trtd56/VentilatorPressurePrediction/blob/016f42ac7a5890f18407d6a42a04cd66b8555e49/src/ventilatorlstm.py
 [exp013_1dcnn_lstm]:https://www.kaggle.com/takamichitoda/ventilator-1dcnn-lstm?scriptVersionId=75942298
 [exp013_cnn_head]:https://www.kaggle.com/takamichitoda/ventilator-1dcnn-lstm?scriptVersionId=75945718
-[exp014_transformer_head]:xxx
+[exp014_transformer_head]:https://github.com/trtd56/VentilatorPressurePrediction/blob/b91c64ededd01c53453c5fa1b32321019f624496/src/ventilatorlstm.py
 
 ## ToDo
 - outを別特徴として連結
+- out==1は使われてないっぽい？
+- TabTransformer: https://arxiv.org/pdf/2012.06678.pdf
