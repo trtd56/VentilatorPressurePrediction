@@ -32,7 +32,8 @@
 |[exp023_1dcnn]|0.387|0.559||
 |exp024_mask2|||以下参照|
 |exp025_con_out||||
-
+|exp026_con_emb||||
+|exp027_dilation||||
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
 [exp001_u_in_time]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75511345
