@@ -28,7 +28,7 @@
 |exp019_transformer_lstm|||やっぱ良くない|
 |exp020_liner_sche_f0|0.218|0.247||
 |exp020_add_feat|||normすれば良さそう|
-|[exp022_cos]||||
+|[exp022_cos]|0.212|0.244||
 |[exp023_1dcnn]||||
 |exp024_mask2||||
 
@@ -56,11 +56,10 @@
 fold-0
 |method|OOF|OOF mask|LB|
 |--|--|--|--|
-|maskなし|0.204||0.253|
+|maskなし|0.204|0.253|0.253|
 |maskあり||||
 
 ## ToDo
 - outを別特徴として連結
-- out==1は使われてないっぽい？
 - 1dcnn, dilation, https://arxiv.org/pdf/1803.01271.pdf
   - https://qiita.com/top4hac/items/2a044b41c69f3c8802ef
