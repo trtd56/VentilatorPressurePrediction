@@ -61,6 +61,5 @@ fold-0
 |maskあり|0.215|0.255|0.257|
 
 ## ToDo
-- outを別特徴として連結
 - 1dcnn, dilation, https://arxiv.org/pdf/1803.01271.pdf
   - https://qiita.com/top4hac/items/2a044b41c69f3c8802ef
