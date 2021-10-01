@@ -59,7 +59,7 @@ fold-0
 |--|--|--|--|
 |maskなし|0.204|0.253|0.253|
 |maskあり|0.215|0.255|0.257|
-|concat||||
+|concat|0.211|0.267|0.269|
 
 ## ToDo
 - 1dcnn, dilation, https://arxiv.org/pdf/1803.01271.pdf
