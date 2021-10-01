@@ -57,6 +57,7 @@ fold-0
 |method|OOF|OOF mask|LB|
 |--|--|--|--|
 |maskなし|0.204||0.253|
+|maskあり||||
 
 ## ToDo
 - outを別特徴として連結
