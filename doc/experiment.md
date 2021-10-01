@@ -29,7 +29,7 @@
 |exp020_liner_sche_f0|0.218|0.247||
 |exp020_add_feat|||normすれば良さそう|
 |[exp022_cos]|0.212|0.244||
-|[exp023_1dcnn]|0.387|||
+|[exp023_1dcnn]|0.387|0.559||
 |exp024_mask2|||以下参照|
 |exp025_con_out||||
 
