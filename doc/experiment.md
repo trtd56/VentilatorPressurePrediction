@@ -30,6 +30,7 @@
 |exp020_add_feat|||normすれば良さそう|
 |[exp022_cos]||||
 |[exp023_1dcnn]||||
+|exp024_mask2||||
 
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
