@@ -50,16 +50,15 @@ import torch
 import torch.nn as nn
 from torch.nn import functional as F
 from torch.utils.data import Dataset, DataLoader
-from torch.optim.lr_scheduler import CosineAnnealingWarmRestarts, CosineAnnealingLR, ReduceLROnPlateau
 
 from transformers import AdamW
-from transformers import get_linear_schedule_with_warmup, get_cosine_schedule_with_warmup
+from transformers import get_cosine_schedule_with_warmup
 from sklearn.preprocessing import RobustScaler
 
 device = torch.device("cuda")
 
 class config:
-    EXP_NAME = "exp014_transformer_head"
+    EXP_NAME = "exp022_cos"
     
     INPUT = "/content/"
     OUTPUT = "/content/drive/MyDrive/Study/ventilator-pressure-prediction"
@@ -68,7 +67,8 @@ class config:
     
     LR = 5e-3
     N_EPOCHS = 50
-    HIDDEN_SIZE = 64
+    EMBED_SIZE = 64
+    HIDDEN_SIZE = 256
     BS = 512
     WEIGHT_DECAY = 1e-5
     T_MAX = 50
@@ -96,9 +96,7 @@ class VentilatorDataset(Dataset):
     
     def __getitem__(self, item):
         df = self.dfs[item]
-        
-        X = df[['R_cate', 'C_cate', 'u_in', 'u_out'] + ['time_step', 'breath_time', 'u_in_time', 'u_in_lag_1', 'u_in_lag_2']].values
-        #X = df[['R_cate', 'C_cate', 'u_in', 'u_out']].values
+        X = df[['R_cate', 'C_cate', 'RC_dot', 'RC_sum', 'u_in', 'u_out'] + ['time_step', 'u_in_lag_1', 'u_in_lag_2', 'u_in_time', 'breath_time'] + ['u_in_cumsum', 'area', 'cross', 'cross2']].values
         y = df['pressure'].values
         d = {
             "X": torch.tensor(X).float(),
@@ -106,47 +104,25 @@ class VentilatorDataset(Dataset):
         }
         return d
 
-class PositionalEncoding(nn.Module):
-
-    def __init__(self, d_model: int, dropout: float = 0.1, max_len: int = 5000):
-        super().__init__()
-        self.dropout = nn.Dropout(p=dropout)
-
-        position = torch.arange(max_len).unsqueeze(1)
-        div_term = torch.exp(torch.arange(0, d_model, 2) * (-math.log(10000.0) / d_model))
-        pe = torch.zeros(max_len, 1, d_model)
-        pe[:, 0, 0::2] = torch.sin(position * div_term)
-        pe[:, 0, 1::2] = torch.cos(position * div_term)
-        self.register_buffer('pe', pe)
-
-    def forward(self, x):
-        """
-        Args:
-            x: Tensor, shape [seq_len, batch_size, embedding_dim]
-        """
-        x = x + self.pe[:x.size(0)]
-        return self.dropout(x)
-    
 class VentilatorModel(nn.Module):
     
     def __init__(self):
         super(VentilatorModel, self).__init__()
         self.r_emb = nn.Embedding(3, 2, padding_idx=0)
         self.c_emb = nn.Embedding(3, 2, padding_idx=0)
+        self.rc_dot_emb = nn.Embedding(8, 4, padding_idx=0)
+        self.rc_sum_emb = nn.Embedding(8, 4, padding_idx=0)
         self.seq_emb = nn.Sequential(
-            nn.Linear(11, config.HIDDEN_SIZE),
-            nn.LayerNorm(config.HIDDEN_SIZE),
+            nn.Linear(12+11, config.EMBED_SIZE),
+            nn.LayerNorm(config.EMBED_SIZE),
             nn.ReLU(),
             nn.Dropout(0.2),
         )
         
-        self.lstm1 = nn.LSTM(config.HIDDEN_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
+        self.lstm1 = nn.LSTM(config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
         self.lstm2 = nn.LSTM(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
         self.lstm3 = nn.LSTM(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
-        
-        self.pos_encoder = PositionalEncoding(d_model=config.HIDDEN_SIZE * 2, dropout=0.2)
-        encoder_layers = nn.TransformerEncoderLayer(d_model=config.HIDDEN_SIZE * 2, nhead=1, dim_feedforward=2048, dropout=0.2, batch_first=True)
-        self.transformer_encoder = nn.TransformerEncoder(encoder_layers, num_layers=1)
+        self.lstm4 = nn.LSTM(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
 
         self.head = nn.Sequential(
             nn.Linear(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE * 2),
@@ -172,25 +148,27 @@ class VentilatorModel(nn.Module):
                         nn.init.normal_(param.data)
 
     def forward(self, X, y=None):
+        # embed
         bs = X.shape[0]
         r_emb = self.r_emb(X[:,:,0].long()).view(bs, 80, -1)
         c_emb = self.c_emb(X[:,:,1].long()).view(bs, 80, -1)
-        seq_x = torch.cat((r_emb, c_emb, X[:, :, 2:]), 2)
-        h = self.seq_emb(seq_x)
+        rc_dot_emb = self.rc_dot_emb(X[:,:,2].long()).view(bs, 80, -1)
+        rc_sum_emb = self.rc_sum_emb(X[:,:,3].long()).view(bs, 80, -1)
         
-        h, (hn, cn) = self.lstm1(h, None)
-        h, (hn, cn) = self.lstm2(h, (hn, cn))
-        h, _ = self.lstm3(h, (hn, cn))
+        seq_x = torch.cat((r_emb, c_emb, rc_dot_emb, rc_sum_emb, X[:, :, 4:]), 2)
+        out = self.seq_emb(seq_x)
+        
+        out, (hn, cn) = self.lstm1(out, None) 
+        out, (hn, cn) = self.lstm2(out, (hn, cn)) 
+        out, (hn, cn) = self.lstm3(out, (hn, cn)) 
+        out, _ = self.lstm4(out, (hn, cn))
 
-        h = self.pos_encoder(h)
-        h = self.transformer_encoder(h)
-        
-        regr = self.head(h)
+        regr = self.head(out)
         
         if y is None:
             loss = None
         else:
-            mask = X[:, :, 3] == 0
+            mask = X[:, :, 3] == 0  # スコアはu_out=0だけで計算されるそう
             loss = self.loss_fn(regr.squeeze(2), y, mask)
             
         return regr, loss
@@ -242,16 +220,60 @@ def test_loop(model, loader):
     return torch.vstack(predicts).squeeze(2).numpy().reshape(-1)
 
 def add_feature(df):
+    df['area'] = df['time_step'] * df['u_in']
+    df['area'] = df.groupby('breath_id')['area'].cumsum()
+    df['cross']= df['u_in']*df['u_out']
+    df['cross2']= df['time_step']*df['u_out']
+    
+    df['u_in_cumsum'] = (df['u_in']).groupby(df['breath_id']).cumsum()
+    df['one'] = 1
+    df['count'] = (df['one']).groupby(df['breath_id']).cumsum()
+    df['u_in_cummean'] =df['u_in_cumsum'] / df['count']
+    
+    df = df.drop(['count','one'], axis=1)
+    return df
+
+def add_lag_feature(df):
+    # https://www.kaggle.com/kensit/improvement-base-on-tensor-bidirect-lstm-0-173
+    df['breath_id_lag']=df['breath_id'].shift(1).fillna(0)
+    df['breath_id_lag2']=df['breath_id'].shift(2).fillna(0)
+    df['breath_id_lagsame']=np.select([df['breath_id_lag']==df['breath_id']],[1],0)
+    df['breath_id_lag2same']=np.select([df['breath_id_lag2']==df['breath_id']],[1],0)
+
+    # u_in 
+    df['u_in_lag_1'] = df['u_in'].shift(1).fillna(0) * df['breath_id_lagsame']
+    df['u_in_lag_2'] = df['u_in'].shift(2).fillna(0) * df['breath_id_lag2same']
+    df['u_in_time'] = df['u_in'] - df['u_in_lag_1']
     # breath_time
-    df['breath_time'] = df['time_step'] - df['time_step'].shift(1)
-    # u_in_time
-    df['u_in_time'] = df['u_in'] - df['u_in'].shift(1)
-    # lag
-    df['u_in_lag_1'] = df['u_in'].shift(1)
-    df['u_in_lag_2'] = df['u_in'].shift(2)
+    df['time_step_lag'] = df['time_step'].shift(1).fillna(0) * df['breath_id_lagsame']
+    df['breath_time'] = df['time_step'] - df['time_step_lag']
+
+    df = df.drop(['breath_id_lag','breath_id_lag2','breath_id_lagsame','breath_id_lag2same', 'time_step_lag'], axis=1)
+
     # fill na by zero
     df = df.fillna(0)
     return df
+
+c_dic = {10: 0, 20: 1, 50:2}
+r_dic = {5: 0, 20: 1, 50:2}
+rc_sum_dic = {v: i for i, v in enumerate([15, 25, 30, 40, 55, 60, 70, 100])}
+rc_dot_dic = {v: i for i, v in enumerate([50, 100, 200, 250, 400, 500, 2500, 1000])}    
+
+def add_category_features(df):
+    df['C_cate'] = df['C'].map(c_dic)
+    df['R_cate'] = df['R'].map(c_dic)
+    df['RC_sum'] = (df['R'] + df['C']).map(rc_sum_dic)
+    df['RC_dot'] = (df['R'] * df['C']).map(rc_dot_dic)
+    return df
+
+norm_features = ['u_in', 'u_out', 'time_step', 'u_in_lag_1', 'u_in_lag_2', 'u_in_time', 'breath_time', 'u_in_cumsum', 'area', 'cross', 'cross2']
+def norm_scale(train_df, test_df):
+    scaler = RobustScaler()
+    all_u_in = np.vstack([train_df[norm_features].values, test_df[norm_features].values])
+    scaler.fit(all_u_in)
+    train_df[norm_features] = scaler.transform(train_df[norm_features].values)
+    test_df[norm_features] = scaler.transform(test_df[norm_features].values)
+    return train_df, test_df
 
 def main():
     
@@ -265,23 +287,13 @@ def main():
     for fold, (_, valid_idx) in enumerate(gkf):
         train_df.loc[valid_idx, 'fold'] = fold
 
-    train_df['C_cate'] = train_df['C'].map({10: 0, 20: 1, 50:2})
-    train_df['R_cate'] = train_df['R'].map({5: 0, 20: 1, 50:2})
-    test_df['C_cate'] = test_df['C'].map({10: 0, 20: 1, 50:2})
-    test_df['R_cate'] = test_df['R'].map({5: 0, 20: 1, 50:2})
     train_df = add_feature(train_df)
     test_df = add_feature(test_df)
-
-    '''
-    scaler = RobustScaler()
-    all_u_in = np.hstack([train_df['u_in'].values, test_df['u_in'].values])
-    scaler.fit(all_u_in.reshape(-1, 1))
-    train_df['u_in_norm'] = scaler.transform(train_df['u_in'].values.reshape(-1, 1))[:, 0]
-    test_df['u_in_norm'] = scaler.transform(test_df['u_in'].values.reshape(-1, 1))[:, 0]
-
-    train_df['time_step_norm'] = train_df['time_step'] / 3
-    test_df['time_step_norm'] = test_df['time_step'] / 3
-    '''
+    train_df = add_lag_feature(train_df)
+    test_df = add_lag_feature(test_df)
+    train_df = add_category_features(train_df)
+    test_df = add_category_features(test_df)
+    train_df, test_df = norm_scale(train_df, test_df)
 
     test_df['pressure'] = -1
     test_dset = VentilatorDataset(test_df)
@@ -304,7 +316,9 @@ def main():
         model.to(device)
 
         optimizer = AdamW(model.parameters(), lr=config.LR, weight_decay=config.WEIGHT_DECAY)
-        scheduler = CosineAnnealingLR(optimizer, T_max=config.T_MAX, eta_min=config.MIN_LR, last_epoch=-1)
+        num_train_steps = int(len(train_loader) * config.N_EPOCHS)
+        num_warmup_steps = int(num_train_steps / 10)
+        scheduler = get_cosine_schedule_with_warmup(optimizer, num_warmup_steps=num_warmup_steps, num_training_steps=num_train_steps)
 
         uniqe_exp_name = f"{config.EXP_NAME}_f{fold}"
         wandb.init(project='Ventilator', entity='trtd56', name=uniqe_exp_name, group=config.EXP_NAME)
@@ -347,6 +361,10 @@ def main():
         
         sub_df['pressure'] = test_preds
         sub_df.to_csv(f"{config.OUTPUT}/{config.EXP_NAME}/sub_f{fold}.csv", index=None)
+
+        del model, optimizer, scheduler, train_loader, valid_loader, train_dset, valid_dset
+        torch.cuda.empty_cache()
+        gc.collect()
         
     train_df['oof'] = oof
     train_df.to_csv(f"{config.OUTPUT}/{config.EXP_NAME}/oof.csv", index=None)
