@@ -27,6 +27,10 @@
 |exp018_h512|||fold-0で微妙|
 |exp019_transformer_lstm|||やっぱ良くない|
 |exp020_liner_sche_f0|0.218|0.247||
+|exp020_add_feat|||normすれば良さそう|
+|[exp022_cos]||||
+|exp023_1dcnn_f0||||
+
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
 [exp001_u_in_time]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75511345
@@ -43,6 +47,7 @@
 [exp013_1dcnn_lstm]:https://www.kaggle.com/takamichitoda/ventilator-1dcnn-lstm?scriptVersionId=75942298
 [exp013_cnn_head]:https://www.kaggle.com/takamichitoda/ventilator-1dcnn-lstm?scriptVersionId=75945718
 [exp014_transformer_head]:https://github.com/trtd56/VentilatorPressurePrediction/blob/b91c64ededd01c53453c5fa1b32321019f624496/src/ventilatorlstm.py
+[exp022_cos]:https://github.com/trtd56/VentilatorPressurePrediction/blob/565e0de4231d86b7af88a349e3ec03c1abc379c4/src/ventilatorlstm.py
 
 ## ToDo
 - outを別特徴として連結
