@@ -58,7 +58,7 @@ from sklearn.preprocessing import RobustScaler
 device = torch.device("cuda")
 
 class config:
-    EXP_NAME = "exp029_area_fix"
+    EXP_NAME = "exp037_skip_conn"
     
     INPUT = "/content/"
     OUTPUT = "/content/drive/MyDrive/Study/ventilator-pressure-prediction"
@@ -71,8 +71,14 @@ class config:
     HIDDEN_SIZE = 256
     BS = 512
     WEIGHT_DECAY = 1e-5
-    T_MAX = 50
-    MIN_LR = 1e-6
+
+    CATE_FEATURES = ['R_cate', 'C_cate', 'RC_dot', 'RC_sum']
+    CONT_FEATURES = ['u_in', 'u_out', 'time_step'] + ['u_in_cumsum', 'area', 'cross', 'cross2']
+    LAG_FEATURES = ['u_in_lag_1', 'u_in_lag_2', 'u_in_lag_3', 'u_in_lag_4',
+                       'u_in_lag_1_back', 'u_in_lag_2_back', 'u_in_lag_3_back', 'u_in_lag_4_back',
+                       'u_in_time', 'u_in_time2', 'u_in_time3', 'u_in_time4',
+                       'breath_time']
+    ALL_FEATURES = CATE_FEATURES + CONT_FEATURES + LAG_FEATURES
     
     NOT_WATCH_PARAM = ['INPUT']
 
@@ -96,7 +102,7 @@ class VentilatorDataset(Dataset):
     
     def __getitem__(self, item):
         df = self.dfs[item]
-        X = df[['R_cate', 'C_cate', 'RC_dot', 'RC_sum', 'u_in', 'u_out'] + ['time_step', 'u_in_lag_1', 'u_in_lag_2', 'u_in_time', 'breath_time'] + ['u_in_cumsum', 'area', 'cross', 'cross2']].values
+        X = df[config.ALL_FEATURES].values
         y = df['pressure'].values
         d = {
             "X": torch.tensor(X).float(),
@@ -113,28 +119,23 @@ class VentilatorModel(nn.Module):
         self.rc_dot_emb = nn.Embedding(8, 4, padding_idx=0)
         self.rc_sum_emb = nn.Embedding(8, 4, padding_idx=0)
         self.seq_emb = nn.Sequential(
-            nn.Linear(12+11, config.EMBED_SIZE),
+            nn.Linear(12+len(config.CONT_FEATURES)+len(config.LAG_FEATURES), config.EMBED_SIZE),
             nn.LayerNorm(config.EMBED_SIZE),
-            nn.ReLU(),
-            nn.Dropout(0.2),
         )
-        #self.cnn1 = nn.Conv1d(config.EMBED_SIZE, config.HIDDEN_SIZE, kernel_size=2, padding=0)
-        #self.cnn2 = nn.Conv1d(config.HIDDEN_SIZE, config.HIDDEN_SIZE, kernel_size=2, padding=1, dilation=2)
-        #self.cnn3 = nn.Conv1d(config.HIDDEN_SIZE, config.HIDDEN_SIZE, kernel_size=2, padding=2, dilation=4)
-        #self.cnn4 = nn.Conv1d(config.HIDDEN_SIZE, config.HIDDEN_SIZE, kernel_size=2, padding=4, dilation=8)
-        #self.cnn1 = nn.Conv1d(config.EMBED_SIZE, config.HIDDEN_SIZE, kernel_size=2, padding=1)
-        #self.cnn2 = nn.Conv1d(config.HIDDEN_SIZE, config.HIDDEN_SIZE, kernel_size=2, padding=0)
         
         self.lstm1 = nn.LSTM(config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
-        self.lstm2 = nn.LSTM(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
-        self.lstm3 = nn.LSTM(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
-        self.lstm4 = nn.LSTM(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
+        #self.norm1 = nn.LayerNorm(config.HIDDEN_SIZE * 2)
+        self.lstm2 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
+        #self.norm2 = nn.LayerNorm(config.HIDDEN_SIZE * 2)
+        self.lstm3 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
+        #self.norm3 = nn.LayerNorm(config.HIDDEN_SIZE * 2)
+        self.lstm4 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
+        #self.norm4 = nn.LayerNorm(config.HIDDEN_SIZE * 2)
 
         self.head = nn.Sequential(
             nn.Linear(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE * 2),
             nn.LayerNorm(config.HIDDEN_SIZE * 2),
             nn.ReLU(),
-            nn.Dropout(0.),
             nn.Linear(config.HIDDEN_SIZE * 2, 1),
         )
         
@@ -163,42 +164,35 @@ class VentilatorModel(nn.Module):
         
         seq_x = torch.cat((r_emb, c_emb, rc_dot_emb, rc_sum_emb, X[:, :, 4:]), 2)
         emb_x = self.seq_emb(seq_x)
-
-        # CNN
-        '''
-        h = torch.cat([emb_x.permute(0, 2, 1), torch.zeros((bs, config.EMBED_SIZE, 1)).to(device)], 2)
-        h = F.relu(self.cnn1(h))
-        h = F.relu(self.cnn2(h))
-        h = F.relu(self.cnn3(h))
-        h = F.relu(self.cnn4(h))
-        out = h.permute(0, 2, 1)
-        '''
-        # CNN
-        #h = emb_x.permute(0, 2, 1)
-        #h = F.relu(self.cnn1(h))
-        #h = F.relu(self.cnn2(h))
-        #out = h.permute(0, 2, 1)
         
         out, (hn, cn) = self.lstm1(emb_x, None) 
+        #out = self.norm1(out)
+        out = torch.cat((out, emb_x), 2)
         out, (hn, cn) = self.lstm2(out, (hn, cn))
+        #out = self.norm2(out)
+        out = torch.cat((out, emb_x), 2)
         out, (hn, cn) = self.lstm3(out, (hn, cn)) 
+        #out = self.norm3(out)
+        out = torch.cat((out, emb_x), 2)
         out, _ = self.lstm4(out, (hn, cn))
+        #out = self.norm4(out)
 
         regr = self.head(out)
-        
+
         if y is None:
             loss = None
         else:
-            mask = X[:, :, 5] == 0  # スコアはu_out=0だけで計算されるそう
-            loss = self.loss_fn(regr.squeeze(2), y, mask)
+            loss = self.loss_fn(regr.squeeze(2), y)
             
         return regr, loss
     
-    def loss_fn(self, y_pred, y_true, mask):
-        #loss1 = nn.L1Loss()(y_pred[mask], y_true[mask])
-        #loss2 = nn.L1Loss()(y_pred[mask==0], y_true[mask==0])
-        #loss = loss1 * 2 + loss2
+    def loss_fn(self, y_pred, y_true):
         loss = nn.L1Loss()(y_pred, y_true)
+        #loss_w = torch.tensor([(i+1)/80 for i in range(80)]).to(device)
+        #loss_w = torch.tensor([(80-i)/80 for i in range(80)]).to(device)
+
+        #loss = nn.L1Loss(reduction='none')(y_pred, y_true)
+        #loss = (loss * loss_w).mean()
         return loss
 
 def train_loop(model, optimizer, scheduler, loader):
@@ -262,18 +256,33 @@ def add_lag_feature(df):
     # https://www.kaggle.com/kensit/improvement-base-on-tensor-bidirect-lstm-0-173
     df['breath_id_lag']=df['breath_id'].shift(1).fillna(0)
     df['breath_id_lag2']=df['breath_id'].shift(2).fillna(0)
+    df['breath_id_lag3']=df['breath_id'].shift(3).fillna(0)
+    df['breath_id_lag4']=df['breath_id'].shift(4).fillna(0)
     df['breath_id_lagsame']=np.select([df['breath_id_lag']==df['breath_id']],[1],0)
     df['breath_id_lag2same']=np.select([df['breath_id_lag2']==df['breath_id']],[1],0)
+    df['breath_id_lag3same']=np.select([df['breath_id_lag3']==df['breath_id']],[1],0)
+    df['breath_id_lag4same']=np.select([df['breath_id_lag4']==df['breath_id']],[1],0)
 
     # u_in 
     df['u_in_lag_1'] = df['u_in'].shift(1).fillna(0) * df['breath_id_lagsame']
     df['u_in_lag_2'] = df['u_in'].shift(2).fillna(0) * df['breath_id_lag2same']
+    df['u_in_lag_3'] = df['u_in'].shift(3).fillna(0) * df['breath_id_lag3same']
+    df['u_in_lag_4'] = df['u_in'].shift(4).fillna(0) * df['breath_id_lag4same']
+    df['u_in_lag_1_back'] = df['u_in'].shift(-1).fillna(0) * df['breath_id_lagsame']
+    df['u_in_lag_2_back'] = df['u_in'].shift(-2).fillna(0) * df['breath_id_lag2same']
+    df['u_in_lag_3_back'] = df['u_in'].shift(-3).fillna(0) * df['breath_id_lag3same']
+    df['u_in_lag_4_back'] = df['u_in'].shift(-4).fillna(0) * df['breath_id_lag4same']
     df['u_in_time'] = df['u_in'] - df['u_in_lag_1']
+    df['u_in_time2'] = df['u_in'] - df['u_in_lag_2']
+    df['u_in_time3'] = df['u_in'] - df['u_in_lag_3']
+    df['u_in_time4'] = df['u_in'] - df['u_in_lag_4']
     # breath_time
     df['time_step_lag'] = df['time_step'].shift(1).fillna(0) * df['breath_id_lagsame']
     df['breath_time'] = df['time_step'] - df['time_step_lag']
 
-    df = df.drop(['breath_id_lag','breath_id_lag2','breath_id_lagsame','breath_id_lag2same', 'time_step_lag'], axis=1)
+    df = df.drop(['breath_id_lag','breath_id_lag2', 'breath_id_lag3', 'breath_id_lag4',
+                  'breath_id_lagsame','breath_id_lag2same', 'breath_id_lag3same', 'breath_id_lag4same',
+                  'time_step_lag'], axis=1)
 
     # fill na by zero
     df = df.fillna(0)
@@ -292,7 +301,7 @@ def add_category_features(df):
     return df
 
 
-norm_features = ['u_in', 'time_step', 'u_in_lag_1', 'u_in_lag_2', 'u_in_time', 'breath_time', 'u_in_cumsum', 'area', 'cross', 'cross2']
+norm_features = config.CONT_FEATURES + config.LAG_FEATURES
 def norm_scale(train_df, test_df):
     scaler = RobustScaler()
     all_u_in = np.vstack([train_df[norm_features].values, test_df[norm_features].values])
@@ -369,7 +378,7 @@ def main():
             mask = (train_df.query(f"fold=={fold}")['u_out'] == 0).values
             _score = valid_predict - train_df.query(f"fold=={fold}")['pressure'].values
             valid_score_mask = np.abs(_score[mask]).mean()
-            
+
             if valid_score < valid_best_score:
                 valid_best_score = valid_score
                 torch.save(model.state_dict(), model_path)
@@ -398,13 +407,13 @@ def main():
         sub_df['pressure'] = test_preds
         sub_df.to_csv(f"{config.OUTPUT}/{config.EXP_NAME}/sub_f{fold}.csv", index=None)
 
-        del model, optimizer, scheduler, train_loader, valid_loader, train_dset, valid_dset
-        torch.cuda.empty_cache()
-        gc.collect()
-
         train_df['oof'] = oof
         train_df.to_csv(f"{config.OUTPUT}/{config.EXP_NAME}/oof.csv", index=None)
         wandb.finish()
+
+        del model, optimizer, scheduler, train_loader, valid_loader, train_dset, valid_dset
+        torch.cuda.empty_cache()
+        gc.collect()
     
     sub_df['pressure'] = np.stack(test_preds_lst).mean(0)
     sub_df.to_csv(f"{config.OUTPUT}/{config.EXP_NAME}/submission.csv", index=None)
@@ -414,9 +423,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-# Commented out IPython magic to ensure Python compatibility.
-# %debug
 
 wandb.finish()
 
