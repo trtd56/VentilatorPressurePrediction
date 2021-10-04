@@ -71,3 +71,5 @@ fold-0
 ## ToDo
 - 平均との差など
 - 手前のlossを下げる
+- skip conn
+- lagをひたすら増やす
