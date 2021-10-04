@@ -35,7 +35,7 @@
 |exp026_con_emb||||
 |exp027_dilation|||メモリオーバー|
 |exp028_1dcnn|||あんまり変わらない|
-|[exp029_area_fix]||||
+|[exp029_area_fix]|||fold-0=0.232|
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
 [exp001_u_in_time]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75511345
