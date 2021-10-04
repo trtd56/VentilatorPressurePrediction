@@ -42,7 +42,7 @@
 |exp033_back|||fold-0=0.218|
 |exp034_loss_w|||fold-0=0.260, mask lossは良かったが・・・|
 |exp035_loss_w_inv|||fold-0=|
-
+|exp036_norm|||fold-0=|
 
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
@@ -77,4 +77,3 @@ fold-0
 - skip conn
 - lagをひたすら増やす
 - mcnn的な
-- layer norm
