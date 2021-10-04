@@ -43,7 +43,7 @@
 |exp034_loss_w|||fold-0=0.260, mask lossは良かったが・・・|
 |exp035_loss_w_inv|||良くないので途中で打ち切り|
 |exp036_norm|||良くないので途中で打ち切り|
-|[exp037_skip_conn]|||fold-0=|
+|[exp037_skip_conn]|||fold-0=0.216|
 |exp038_lstm6|||良くないので途中で打ち切り|
 |exp039_lstm6_222|||fold-0=|
 |exp040_lag6||||
