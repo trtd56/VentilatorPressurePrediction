@@ -73,3 +73,4 @@ fold-0
 - 手前のlossを下げる
 - skip conn
 - lagをひたすら増やす
+- mcnn的な
