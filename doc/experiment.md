@@ -43,7 +43,7 @@
 |exp034_loss_w|||fold-0=0.260, mask lossは良かったが・・・|
 |exp035_loss_w_inv|||良くないので途中で打ち切り|
 |exp036_norm|||良くないので途中で打ち切り|
-|exp037_skip_conn|||fold-0=|
+|[exp037_skip_conn]|||fold-0=|
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
 [exp001_u_in_time]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75511345
@@ -63,6 +63,7 @@
 [exp022_cos]:https://github.com/trtd56/VentilatorPressurePrediction/blob/565e0de4231d86b7af88a349e3ec03c1abc379c4/src/ventilatorlstm.py
 [exp023_1dcnn]:https://www.kaggle.com/takamichitoda/ventilator-1dcnn-lstm?scriptVersionId=76092602
 [exp029_area_fix]:https://github.com/trtd56/VentilatorPressurePrediction/blob/0ad30e01f53bf0953537bded82ce2c47737efded/src/ventilatorlstm.py
+[exp037_skip_conn]:https://github.com/trtd56/VentilatorPressurePrediction/blob/5c73c924d776b79e6be5c5af574adf9ea4919ea4/src/ventilatorlstm.py
 
 ## n_out
 fold-0
