@@ -44,6 +44,8 @@
 |exp035_loss_w_inv|||良くないので途中で打ち切り|
 |exp036_norm|||良くないので途中で打ち切り|
 |[exp037_skip_conn]|||fold-0=|
+|exp038_lstm6|||fold-0=|
+|exp039_lstm6_222|||fold-0=|
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
 [exp001_u_in_time]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75511345
