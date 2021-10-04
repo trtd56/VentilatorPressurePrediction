@@ -84,3 +84,4 @@ fold-0
 ## ToDo
 - 平均との差など
 - mcnn的な
+- u_in_cumsum window
