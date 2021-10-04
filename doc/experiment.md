@@ -46,7 +46,8 @@
 |[exp037_skip_conn]|||fold-0=0.216|
 |exp038_lstm6|||良くないので途中で打ち切り|
 |exp039_lstm6_222|||fold-0=|
-|exp040_lag6||||
+|[exp040_lag6]||||
+|[exp040_lag6]|||ensemble median|
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
 [exp001_u_in_time]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75511345
@@ -67,6 +68,7 @@
 [exp023_1dcnn]:https://www.kaggle.com/takamichitoda/ventilator-1dcnn-lstm?scriptVersionId=76092602
 [exp029_area_fix]:https://github.com/trtd56/VentilatorPressurePrediction/blob/0ad30e01f53bf0953537bded82ce2c47737efded/src/ventilatorlstm.py
 [exp037_skip_conn]:https://github.com/trtd56/VentilatorPressurePrediction/blob/5c73c924d776b79e6be5c5af574adf9ea4919ea4/src/ventilatorlstm.py
+[exp040_lag6]:https://github.com/trtd56/VentilatorPressurePrediction/blob/b3093318367dbc89484cdf157484b2b5876ab87c/src/ventilatorlstm.py
 
 ## n_out
 fold-0
