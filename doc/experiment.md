@@ -47,10 +47,12 @@
 |exp038_lstm6|||良くないので途中で打ち切り|
 |exp039_lstm6_222|||良くないので途中で打ち切り|
 |[exp040_lag6]|||良くないので途中で打ち切り|
-|exp041_log_w||||
-|exp041_log_w|||ensemble median|
-|exp041_log_w|||[post processing](https://www.kaggle.com/snnclsr/a-dummy-approach-to-improve-your-score-postprocess)|
-
+|exp041_log_w|||良くないので途中で打ち切り|
+|exp045_now_best||||
+|exp045_now_best|||ensemble median|
+|exp045_now_best|||[post processing](https://www.kaggle.com/snnclsr/a-dummy-approach-to-improve-your-score-postprocess)|
+|exp045_mcnn|||良くないので途中で打ち切り|
+|[exp046_inc_epoch]||||
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
 [exp001_u_in_time]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75511345
@@ -72,6 +74,7 @@
 [exp029_area_fix]:https://github.com/trtd56/VentilatorPressurePrediction/blob/0ad30e01f53bf0953537bded82ce2c47737efded/src/ventilatorlstm.py
 [exp037_skip_conn]:https://github.com/trtd56/VentilatorPressurePrediction/blob/5c73c924d776b79e6be5c5af574adf9ea4919ea4/src/ventilatorlstm.py
 [exp040_lag6]:https://github.com/trtd56/VentilatorPressurePrediction/blob/b3093318367dbc89484cdf157484b2b5876ab87c/src/ventilatorlstm.py
+[exp046_inc_epoch]:https://github.com/trtd56/VentilatorPressurePrediction/tree/30d3d15444573bc502a4bc1790fe26a31754a751
 
 ## n_out
 fold-0
@@ -83,5 +86,4 @@ fold-0
 
 ## ToDo
 - 平均との差など
-- mcnn的な
 - u_in_cumsum window
