@@ -35,7 +35,11 @@
 |exp026_con_emb||||
 |exp027_dilation|||メモリオーバー|
 |exp028_1dcnn|||あんまり変わらない|
-|[exp029_area_fix]|||fold-0=0.232|
+|[exp029_area_fix]||||
+|exp030_transformer|||train lossが暴発する|
+|exp031_no_dropout|||fold-0=0.232|
+|exp032_lag4|||fold-0=0.224|
+|exp033_back||||
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
 [exp001_u_in_time]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75511345
@@ -65,8 +69,5 @@ fold-0
 |concat|0.211|0.267|0.269|
 
 ## ToDo
-- no-drop out
-- shift 4まで
-- shift逆も
 - 平均との差など
 - 手前のlossを下げる
