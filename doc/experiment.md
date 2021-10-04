@@ -41,7 +41,7 @@
 |exp032_lag4|||fold-0=0.224|
 |exp033_back|||fold-0=0.218|
 |exp034_loss_w|||fold-0=0.260, mask lossは良かったが・・・|
-|exp035_loss_w_inv|||fold-0=|
+|exp035_loss_w_inv|||良くないので途中で打ち切り|
 |exp036_norm|||fold-0=|
 
 
