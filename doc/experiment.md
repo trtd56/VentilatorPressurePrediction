@@ -41,6 +41,9 @@
 |exp032_lag4|||fold-0=0.224|
 |exp033_back|||fold-0=0.218|
 |exp034_loss_w|||fold-0=0.260, mask lossは良かったが・・・|
+|exp035_loss_w_inv|||fold-0=|
+
+
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
 [exp001_u_in_time]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75511345
@@ -71,7 +74,6 @@ fold-0
 
 ## ToDo
 - 平均との差など
-- 手前のlossを下げる
 - skip conn
 - lagをひたすら増やす
 - mcnn的な
