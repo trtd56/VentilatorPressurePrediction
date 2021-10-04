@@ -58,7 +58,7 @@ from sklearn.preprocessing import RobustScaler
 device = torch.device("cuda")
 
 class config:
-    EXP_NAME = "exp022_cos"
+    EXP_NAME = "exp029_area_fix"
     
     INPUT = "/content/"
     OUTPUT = "/content/drive/MyDrive/Study/ventilator-pressure-prediction"
@@ -118,6 +118,12 @@ class VentilatorModel(nn.Module):
             nn.ReLU(),
             nn.Dropout(0.2),
         )
+        #self.cnn1 = nn.Conv1d(config.EMBED_SIZE, config.HIDDEN_SIZE, kernel_size=2, padding=0)
+        #self.cnn2 = nn.Conv1d(config.HIDDEN_SIZE, config.HIDDEN_SIZE, kernel_size=2, padding=1, dilation=2)
+        #self.cnn3 = nn.Conv1d(config.HIDDEN_SIZE, config.HIDDEN_SIZE, kernel_size=2, padding=2, dilation=4)
+        #self.cnn4 = nn.Conv1d(config.HIDDEN_SIZE, config.HIDDEN_SIZE, kernel_size=2, padding=4, dilation=8)
+        #self.cnn1 = nn.Conv1d(config.EMBED_SIZE, config.HIDDEN_SIZE, kernel_size=2, padding=1)
+        #self.cnn2 = nn.Conv1d(config.HIDDEN_SIZE, config.HIDDEN_SIZE, kernel_size=2, padding=0)
         
         self.lstm1 = nn.LSTM(config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
         self.lstm2 = nn.LSTM(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
@@ -156,10 +162,25 @@ class VentilatorModel(nn.Module):
         rc_sum_emb = self.rc_sum_emb(X[:,:,3].long()).view(bs, 80, -1)
         
         seq_x = torch.cat((r_emb, c_emb, rc_dot_emb, rc_sum_emb, X[:, :, 4:]), 2)
-        out = self.seq_emb(seq_x)
+        emb_x = self.seq_emb(seq_x)
+
+        # CNN
+        '''
+        h = torch.cat([emb_x.permute(0, 2, 1), torch.zeros((bs, config.EMBED_SIZE, 1)).to(device)], 2)
+        h = F.relu(self.cnn1(h))
+        h = F.relu(self.cnn2(h))
+        h = F.relu(self.cnn3(h))
+        h = F.relu(self.cnn4(h))
+        out = h.permute(0, 2, 1)
+        '''
+        # CNN
+        #h = emb_x.permute(0, 2, 1)
+        #h = F.relu(self.cnn1(h))
+        #h = F.relu(self.cnn2(h))
+        #out = h.permute(0, 2, 1)
         
-        out, (hn, cn) = self.lstm1(out, None) 
-        out, (hn, cn) = self.lstm2(out, (hn, cn)) 
+        out, (hn, cn) = self.lstm1(emb_x, None) 
+        out, (hn, cn) = self.lstm2(out, (hn, cn))
         out, (hn, cn) = self.lstm3(out, (hn, cn)) 
         out, _ = self.lstm4(out, (hn, cn))
 
@@ -168,7 +189,7 @@ class VentilatorModel(nn.Module):
         if y is None:
             loss = None
         else:
-            mask = X[:, :, 3] == 0  # スコアはu_out=0だけで計算されるそう
+            mask = X[:, :, 5] == 0  # スコアはu_out=0だけで計算されるそう
             loss = self.loss_fn(regr.squeeze(2), y, mask)
             
         return regr, loss
@@ -220,8 +241,12 @@ def test_loop(model, loader):
     return torch.vstack(predicts).squeeze(2).numpy().reshape(-1)
 
 def add_feature(df):
-    df['area'] = df['time_step'] * df['u_in']
-    df['area'] = df.groupby('breath_id')['area'].cumsum()
+    #df['area'] = df['time_step'] * df['u_in']
+    #df['area'] = df.groupby('breath_id')['area'].cumsum()
+    df['time_delta'] = df.groupby('breath_id')['time_step'].diff().fillna(0)
+    df['delta'] = df['time_delta'] * df['u_in']
+    df['area'] = df.groupby('breath_id')['delta'].cumsum()
+
     df['cross']= df['u_in']*df['u_out']
     df['cross2']= df['time_step']*df['u_out']
     
@@ -266,7 +291,8 @@ def add_category_features(df):
     df['RC_dot'] = (df['R'] * df['C']).map(rc_dot_dic)
     return df
 
-norm_features = ['u_in', 'u_out', 'time_step', 'u_in_lag_1', 'u_in_lag_2', 'u_in_time', 'breath_time', 'u_in_cumsum', 'area', 'cross', 'cross2']
+
+norm_features = ['u_in', 'time_step', 'u_in_lag_1', 'u_in_lag_2', 'u_in_time', 'breath_time', 'u_in_cumsum', 'area', 'cross', 'cross2']
 def norm_scale(train_df, test_df):
     scaler = RobustScaler()
     all_u_in = np.vstack([train_df[norm_features].values, test_df[norm_features].values])
@@ -334,21 +360,31 @@ def main():
         model_path = f"{config.OUTPUT}/{config.EXP_NAME}/ventilator_f{fold}_best_model.bin"
         
         valid_best_score = float('inf')
+        valid_best_score_mask = float('inf')
         for epoch in tqdm(range(config.N_EPOCHS)):
             train_loss, lrs = train_loop(model, optimizer, scheduler, train_loader)
             valid_loss, valid_predict = valid_loop(model, valid_loader)
             valid_score = np.abs(valid_predict - train_df.query(f"fold=={fold}")['pressure'].values).mean()
 
+            mask = (train_df.query(f"fold=={fold}")['u_out'] == 0).values
+            _score = valid_predict - train_df.query(f"fold=={fold}")['pressure'].values
+            valid_score_mask = np.abs(_score[mask]).mean()
+            
             if valid_score < valid_best_score:
                 valid_best_score = valid_score
                 torch.save(model.state_dict(), model_path)
                 oof[train_df.query(f"fold=={fold}").index.values] = valid_predict
+
+            if valid_score_mask < valid_best_score_mask:
+                valid_best_score_mask = valid_score_mask
 
             wandb.log({
                 "train_loss": train_loss,
                 "valid_loss": valid_loss,
                 "valid_score": valid_score,
                 "valid_best_score": valid_best_score,
+                "valid_score_mask": valid_score_mask,
+                "valid_best_score_mask": valid_best_score_mask,
                 "learning_rate": lrs,
             })
             
@@ -365,9 +401,10 @@ def main():
         del model, optimizer, scheduler, train_loader, valid_loader, train_dset, valid_dset
         torch.cuda.empty_cache()
         gc.collect()
-        
-    train_df['oof'] = oof
-    train_df.to_csv(f"{config.OUTPUT}/{config.EXP_NAME}/oof.csv", index=None)
+
+        train_df['oof'] = oof
+        train_df.to_csv(f"{config.OUTPUT}/{config.EXP_NAME}/oof.csv", index=None)
+        wandb.finish()
     
     sub_df['pressure'] = np.stack(test_preds_lst).mean(0)
     sub_df.to_csv(f"{config.OUTPUT}/{config.EXP_NAME}/submission.csv", index=None)
@@ -377,6 +414,9 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# Commented out IPython magic to ensure Python compatibility.
+# %debug
 
 wandb.finish()
 
