@@ -69,3 +69,5 @@ fold-0
   - https://qiita.com/top4hac/items/2a044b41c69f3c8802ef
 - no-drop out
 - shift 4まで
+- shift逆も
+- 平均との差など
