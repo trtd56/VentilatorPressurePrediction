@@ -75,3 +75,4 @@ fold-0
 - skip conn
 - lagをひたすら増やす
 - mcnn的な
+- layer norm
