@@ -45,10 +45,11 @@
 |exp036_norm|||良くないので途中で打ち切り|
 |[exp037_skip_conn]|||fold-0=0.216|
 |exp038_lstm6|||良くないので途中で打ち切り|
-|exp039_lstm6_222|||fold-0=|
-|[exp040_lag6]||||
-|[exp040_lag6]|||ensemble median|
+|exp039_lstm6_222|||良くないので途中で打ち切り|
+|[exp040_lag6]|||良くないので途中で打ち切り|
 |exp041_log_w||||
+|exp041_log_w|||ensemble median|
+|exp041_log_w|||[post processing](https://www.kaggle.com/snnclsr/a-dummy-approach-to-improve-your-score-postprocess)|
 
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
