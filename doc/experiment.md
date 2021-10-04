@@ -74,6 +74,6 @@ fold-0
 
 ## ToDo
 - 平均との差など
-- skip conn
+- skip conn(層を増やす)
 - lagをひたすら増やす
 - mcnn的な
