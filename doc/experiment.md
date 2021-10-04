@@ -65,3 +65,5 @@ fold-0
 ## ToDo
 - 1dcnn, dilation, https://arxiv.org/pdf/1803.01271.pdf
   - https://qiita.com/top4hac/items/2a044b41c69f3c8802ef
+- areaの修正
+- shift 4まで
