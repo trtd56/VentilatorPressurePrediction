@@ -58,7 +58,7 @@ from sklearn.preprocessing import RobustScaler
 device = torch.device("cuda")
 
 class config:
-    EXP_NAME = "exp040_lag6"
+    EXP_NAME = "exp046_inc_epoch"
     
     INPUT = "/content/"
     OUTPUT = "/content/drive/MyDrive/Study/ventilator-pressure-prediction"
@@ -66,16 +66,16 @@ class config:
     SEED = 0
     
     LR = 5e-3
-    N_EPOCHS = 50
+    N_EPOCHS = 150
     EMBED_SIZE = 64
     HIDDEN_SIZE = 256
     BS = 512
     WEIGHT_DECAY = 1e-5
 
-    USE_LAG = 6
+    USE_LAG = 4
     CATE_FEATURES = ['R_cate', 'C_cate', 'RC_dot', 'RC_sum']
     CONT_FEATURES = ['u_in', 'u_out', 'time_step'] + ['u_in_cumsum', 'area', 'cross', 'cross2']
-    LAG_FEATURES = ['breath_time']
+    LAG_FEATURES = ['breath_time'] #, 'delta_time', 'area_u_in', 'area_u_in_abs', 'uin_in_time']
     LAG_FEATURES += [f'u_in_lag_{i}' for i in range(1, USE_LAG+1)]
     LAG_FEATURES += [f'u_in_lag_{i}_back' for i in range(1, USE_LAG+1)]
     LAG_FEATURES += [f'u_in_time{i}' for i in range(1, USE_LAG+1)]
@@ -124,23 +124,11 @@ class VentilatorModel(nn.Module):
             nn.LayerNorm(config.EMBED_SIZE),
         )
         
-        
         self.lstm1 = nn.LSTM(config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
         self.lstm2 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
         self.lstm3 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
         self.lstm4 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
-        #self.lstm5 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
-        #self.lstm6 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
-        '''
-        self.lstm1 = nn.LSTM(config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
-        self.lstm2 = nn.LSTM(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
 
-        self.lstm3 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
-        self.lstm4 = nn.LSTM(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
-        
-        self.lstm5 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
-        self.lstm6 = nn.LSTM(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
-        '''
         self.head = nn.Sequential(
             nn.Linear(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE * 2),
             nn.LayerNorm(config.HIDDEN_SIZE * 2),
@@ -174,7 +162,6 @@ class VentilatorModel(nn.Module):
         seq_x = torch.cat((r_emb, c_emb, rc_dot_emb, rc_sum_emb, X[:, :, 4:]), 2)
         emb_x = self.seq_emb(seq_x)
         
-        
         out, (hn, cn) = self.lstm1(emb_x, None) 
         out = torch.cat((out, emb_x), 2)
         out, (hn, cn) = self.lstm2(out, (hn, cn))
@@ -182,23 +169,6 @@ class VentilatorModel(nn.Module):
         out, (hn, cn) = self.lstm3(out, (hn, cn)) 
         out = torch.cat((out, emb_x), 2)
         out, (hn, cn) = self.lstm4(out, (hn, cn)) 
-        #out = torch.cat((out, emb_x), 2)
-        #out, (hn, cn) = self.lstm5(out, (hn, cn)) 
-        #out = torch.cat((out, emb_x), 2)
-        #out, _ = self.lstm6(out, (hn, cn))
-
-        '''
-        out, (hn, cn) = self.lstm1(emb_x, None)
-        out_12, (hn, cn) = self.lstm2(out, (hn, cn))
-        out = torch.cat((out_12, emb_x), 2)
-
-        out, (hn, cn) = self.lstm3(out, (hn, cn)) 
-        out_34, (hn, cn) = self.lstm4(out, (hn, cn)) 
-        out = torch.cat((out_34, out_12), 2)
-
-        out, (hn, cn) = self.lstm5(out, (hn, cn)) 
-        out, _ = self.lstm6(out, (hn, cn)) 
-        '''
 
         regr = self.head(out)
 
@@ -211,7 +181,8 @@ class VentilatorModel(nn.Module):
     
     def loss_fn(self, y_pred, y_true):
         loss = nn.L1Loss()(y_pred, y_true)
-        #loss_w = torch.tensor([(i+1)/80 for i in range(80)]).to(device)
+        #loss_w = (5 + torch.tensor([(i+1) / 80 for i in range(80)]).log()) / 5
+        #loss_w = loss_w.to(device)
         #loss = nn.L1Loss(reduction='none')(y_pred, y_true)
         #loss = (loss * loss_w).mean()
         return loss
@@ -266,7 +237,7 @@ def add_feature(df):
     df['u_in_cumsum'] = (df['u_in']).groupby(df['breath_id']).cumsum()
     df['one'] = 1
     df['count'] = (df['one']).groupby(df['breath_id']).cumsum()
-    df['u_in_cummean'] =df['u_in_cumsum'] / df['count']
+    #df['u_in_cummean'] =df['u_in_cumsum'] / df['count']
     
     df = df.drop(['count','one'], axis=1)
     return df
@@ -285,6 +256,12 @@ def add_lag_feature(df):
     # breath_time
     df['time_step_lag'] = df['time_step'].shift(1).fillna(0) * df[f'breath_id_lag{lag}same']
     df['breath_time'] = df['time_step'] - df['time_step_lag']
+
+    # https://www.kaggle.com/c/ventilator-pressure-prediction/discussion/273974#1527377
+    #df['delta_time'] = df['time_step'].shift(-1, fill_value=0) - df['time_step']
+    #df['area_u_in'] = df['u_in'] * df['delta_time']
+    #df['area_u_in_abs'] = df['u_in_lag_1'] * df['delta_time']
+    #df['uin_in_time'] = df['u_in_lag_1'] / df['delta_time']
 
     drop_columns = ['time_step_lag']
     drop_columns += [f'breath_id_lag{i}' for i in range(1, config.USE_LAG+1)]
@@ -306,7 +283,6 @@ def add_category_features(df):
     df['RC_sum'] = (df['R'] + df['C']).map(rc_sum_dic)
     df['RC_dot'] = (df['R'] * df['C']).map(rc_dot_dic)
     return df
-
 
 norm_features = config.CONT_FEATURES + config.LAG_FEATURES
 def norm_scale(train_df, test_df):
