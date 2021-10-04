@@ -65,9 +65,8 @@ fold-0
 |concat|0.211|0.267|0.269|
 
 ## ToDo
-- 1dcnn, dilation, https://arxiv.org/pdf/1803.01271.pdf
-  - https://qiita.com/top4hac/items/2a044b41c69f3c8802ef
 - no-drop out
 - shift 4まで
 - shift逆も
 - 平均との差など
+- 手前のlossを下げる
