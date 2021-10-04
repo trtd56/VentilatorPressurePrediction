@@ -58,7 +58,7 @@ from sklearn.preprocessing import RobustScaler
 device = torch.device("cuda")
 
 class config:
-    EXP_NAME = "exp037_skip_conn"
+    EXP_NAME = "exp040_lag6"
     
     INPUT = "/content/"
     OUTPUT = "/content/drive/MyDrive/Study/ventilator-pressure-prediction"
@@ -72,12 +72,13 @@ class config:
     BS = 512
     WEIGHT_DECAY = 1e-5
 
+    USE_LAG = 6
     CATE_FEATURES = ['R_cate', 'C_cate', 'RC_dot', 'RC_sum']
     CONT_FEATURES = ['u_in', 'u_out', 'time_step'] + ['u_in_cumsum', 'area', 'cross', 'cross2']
-    LAG_FEATURES = ['u_in_lag_1', 'u_in_lag_2', 'u_in_lag_3', 'u_in_lag_4',
-                       'u_in_lag_1_back', 'u_in_lag_2_back', 'u_in_lag_3_back', 'u_in_lag_4_back',
-                       'u_in_time', 'u_in_time2', 'u_in_time3', 'u_in_time4',
-                       'breath_time']
+    LAG_FEATURES = ['breath_time']
+    LAG_FEATURES += [f'u_in_lag_{i}' for i in range(1, USE_LAG+1)]
+    LAG_FEATURES += [f'u_in_lag_{i}_back' for i in range(1, USE_LAG+1)]
+    LAG_FEATURES += [f'u_in_time{i}' for i in range(1, USE_LAG+1)]
     ALL_FEATURES = CATE_FEATURES + CONT_FEATURES + LAG_FEATURES
     
     NOT_WATCH_PARAM = ['INPUT']
@@ -123,15 +124,23 @@ class VentilatorModel(nn.Module):
             nn.LayerNorm(config.EMBED_SIZE),
         )
         
+        
         self.lstm1 = nn.LSTM(config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
-        #self.norm1 = nn.LayerNorm(config.HIDDEN_SIZE * 2)
         self.lstm2 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
-        #self.norm2 = nn.LayerNorm(config.HIDDEN_SIZE * 2)
         self.lstm3 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
-        #self.norm3 = nn.LayerNorm(config.HIDDEN_SIZE * 2)
         self.lstm4 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
-        #self.norm4 = nn.LayerNorm(config.HIDDEN_SIZE * 2)
+        #self.lstm5 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
+        #self.lstm6 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
+        '''
+        self.lstm1 = nn.LSTM(config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
+        self.lstm2 = nn.LSTM(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
 
+        self.lstm3 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
+        self.lstm4 = nn.LSTM(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
+        
+        self.lstm5 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
+        self.lstm6 = nn.LSTM(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
+        '''
         self.head = nn.Sequential(
             nn.Linear(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE * 2),
             nn.LayerNorm(config.HIDDEN_SIZE * 2),
@@ -165,17 +174,31 @@ class VentilatorModel(nn.Module):
         seq_x = torch.cat((r_emb, c_emb, rc_dot_emb, rc_sum_emb, X[:, :, 4:]), 2)
         emb_x = self.seq_emb(seq_x)
         
+        
         out, (hn, cn) = self.lstm1(emb_x, None) 
-        #out = self.norm1(out)
         out = torch.cat((out, emb_x), 2)
         out, (hn, cn) = self.lstm2(out, (hn, cn))
-        #out = self.norm2(out)
         out = torch.cat((out, emb_x), 2)
         out, (hn, cn) = self.lstm3(out, (hn, cn)) 
-        #out = self.norm3(out)
         out = torch.cat((out, emb_x), 2)
-        out, _ = self.lstm4(out, (hn, cn))
-        #out = self.norm4(out)
+        out, (hn, cn) = self.lstm4(out, (hn, cn)) 
+        #out = torch.cat((out, emb_x), 2)
+        #out, (hn, cn) = self.lstm5(out, (hn, cn)) 
+        #out = torch.cat((out, emb_x), 2)
+        #out, _ = self.lstm6(out, (hn, cn))
+
+        '''
+        out, (hn, cn) = self.lstm1(emb_x, None)
+        out_12, (hn, cn) = self.lstm2(out, (hn, cn))
+        out = torch.cat((out_12, emb_x), 2)
+
+        out, (hn, cn) = self.lstm3(out, (hn, cn)) 
+        out_34, (hn, cn) = self.lstm4(out, (hn, cn)) 
+        out = torch.cat((out_34, out_12), 2)
+
+        out, (hn, cn) = self.lstm5(out, (hn, cn)) 
+        out, _ = self.lstm6(out, (hn, cn)) 
+        '''
 
         regr = self.head(out)
 
@@ -189,8 +212,6 @@ class VentilatorModel(nn.Module):
     def loss_fn(self, y_pred, y_true):
         loss = nn.L1Loss()(y_pred, y_true)
         #loss_w = torch.tensor([(i+1)/80 for i in range(80)]).to(device)
-        #loss_w = torch.tensor([(80-i)/80 for i in range(80)]).to(device)
-
         #loss = nn.L1Loss(reduction='none')(y_pred, y_true)
         #loss = (loss * loss_w).mean()
         return loss
@@ -235,8 +256,6 @@ def test_loop(model, loader):
     return torch.vstack(predicts).squeeze(2).numpy().reshape(-1)
 
 def add_feature(df):
-    #df['area'] = df['time_step'] * df['u_in']
-    #df['area'] = df.groupby('breath_id')['area'].cumsum()
     df['time_delta'] = df.groupby('breath_id')['time_step'].diff().fillna(0)
     df['delta'] = df['time_delta'] * df['u_in']
     df['area'] = df.groupby('breath_id')['delta'].cumsum()
@@ -254,35 +273,23 @@ def add_feature(df):
 
 def add_lag_feature(df):
     # https://www.kaggle.com/kensit/improvement-base-on-tensor-bidirect-lstm-0-173
-    df['breath_id_lag']=df['breath_id'].shift(1).fillna(0)
-    df['breath_id_lag2']=df['breath_id'].shift(2).fillna(0)
-    df['breath_id_lag3']=df['breath_id'].shift(3).fillna(0)
-    df['breath_id_lag4']=df['breath_id'].shift(4).fillna(0)
-    df['breath_id_lagsame']=np.select([df['breath_id_lag']==df['breath_id']],[1],0)
-    df['breath_id_lag2same']=np.select([df['breath_id_lag2']==df['breath_id']],[1],0)
-    df['breath_id_lag3same']=np.select([df['breath_id_lag3']==df['breath_id']],[1],0)
-    df['breath_id_lag4same']=np.select([df['breath_id_lag4']==df['breath_id']],[1],0)
+    for lag in range(1, config.USE_LAG+1):
+        df[f'breath_id_lag{lag}']=df['breath_id'].shift(lag).fillna(0)
+        df[f'breath_id_lag{lag}same']=np.select([df[f'breath_id_lag{lag}']==df['breath_id']], [1], 0)
 
-    # u_in 
-    df['u_in_lag_1'] = df['u_in'].shift(1).fillna(0) * df['breath_id_lagsame']
-    df['u_in_lag_2'] = df['u_in'].shift(2).fillna(0) * df['breath_id_lag2same']
-    df['u_in_lag_3'] = df['u_in'].shift(3).fillna(0) * df['breath_id_lag3same']
-    df['u_in_lag_4'] = df['u_in'].shift(4).fillna(0) * df['breath_id_lag4same']
-    df['u_in_lag_1_back'] = df['u_in'].shift(-1).fillna(0) * df['breath_id_lagsame']
-    df['u_in_lag_2_back'] = df['u_in'].shift(-2).fillna(0) * df['breath_id_lag2same']
-    df['u_in_lag_3_back'] = df['u_in'].shift(-3).fillna(0) * df['breath_id_lag3same']
-    df['u_in_lag_4_back'] = df['u_in'].shift(-4).fillna(0) * df['breath_id_lag4same']
-    df['u_in_time'] = df['u_in'] - df['u_in_lag_1']
-    df['u_in_time2'] = df['u_in'] - df['u_in_lag_2']
-    df['u_in_time3'] = df['u_in'] - df['u_in_lag_3']
-    df['u_in_time4'] = df['u_in'] - df['u_in_lag_4']
+        # u_in 
+        df[f'u_in_lag_{lag}'] = df['u_in'].shift(lag).fillna(0) * df[f'breath_id_lag{lag}same']
+        df[f'u_in_lag_{lag}_back'] = df['u_in'].shift(-lag).fillna(0) * df[f'breath_id_lag{lag}same']
+        df[f'u_in_time{lag}'] = df['u_in'] - df[f'u_in_lag_{lag}']
+
     # breath_time
-    df['time_step_lag'] = df['time_step'].shift(1).fillna(0) * df['breath_id_lagsame']
+    df['time_step_lag'] = df['time_step'].shift(1).fillna(0) * df[f'breath_id_lag{lag}same']
     df['breath_time'] = df['time_step'] - df['time_step_lag']
 
-    df = df.drop(['breath_id_lag','breath_id_lag2', 'breath_id_lag3', 'breath_id_lag4',
-                  'breath_id_lagsame','breath_id_lag2same', 'breath_id_lag3same', 'breath_id_lag4same',
-                  'time_step_lag'], axis=1)
+    drop_columns = ['time_step_lag']
+    drop_columns += [f'breath_id_lag{i}' for i in range(1, config.USE_LAG+1)]
+    drop_columns += [f'breath_id_lag{i}same' for i in range(1, config.USE_LAG+1)]
+    df = df.drop(drop_columns, axis=1)
 
     # fill na by zero
     df = df.fillna(0)
@@ -416,7 +423,10 @@ def main():
         gc.collect()
     
     sub_df['pressure'] = np.stack(test_preds_lst).mean(0)
-    sub_df.to_csv(f"{config.OUTPUT}/{config.EXP_NAME}/submission.csv", index=None)
+    sub_df.to_csv(f"{config.OUTPUT}/{config.EXP_NAME}/submission_mean.csv", index=None)
+
+    sub_df['pressure'] = np.median(np.stack(test_preds_lst), axis=0)
+    sub_df.to_csv(f"{config.OUTPUT}/{config.EXP_NAME}/submission_median.csv", index=None)
     
     cv_score = train_df.apply(lambda x: abs(x['oof'] - x['pressure']), axis=1).mean()
     print("CV:", cv_score)
