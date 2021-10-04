@@ -48,6 +48,8 @@
 |exp039_lstm6_222|||fold-0=|
 |[exp040_lag6]||||
 |[exp040_lag6]|||ensemble median|
+|exp041_log_w||||
+
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
 [exp001_u_in_time]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75511345
@@ -81,4 +83,3 @@ fold-0
 ## ToDo
 - 平均との差など
 - mcnn的な
-- loss w logでとか
