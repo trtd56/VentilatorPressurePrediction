@@ -105,6 +105,7 @@ fold-0
 ## ToDo
 - 平均との差など
 - u_in_cumsum window
+- u_out_diff
 
 ## Share
 - LIMEで特徴量
