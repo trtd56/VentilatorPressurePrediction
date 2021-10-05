@@ -59,8 +59,12 @@
 |exp050_bce|||メモリオーバー|
 |exp051_lstm2|||層は多いほうがよさげ|
 |[exp052_cls_reg]||||
-
-
+|exp053_head2||||
+|exp054_lstm6||||
+|exp055_dropout02||||
+|[exp056_transformer]||||
+|exp057_R_fix|||epoch=150, Overfit|
+|[exp058_dec_epoch]||||
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
 [exp001_u_in_time]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75511345
@@ -84,6 +88,9 @@
 [exp040_lag6]:https://github.com/trtd56/VentilatorPressurePrediction/blob/b3093318367dbc89484cdf157484b2b5876ab87c/src/ventilatorlstm.py
 [exp046_inc_epoch]:https://github.com/trtd56/VentilatorPressurePrediction/tree/30d3d15444573bc502a4bc1790fe26a31754a751
 [exp052_cls_reg]:https://github.com/trtd56/VentilatorPressurePrediction/blob/0e8a14fe1b7e7807848d99e293960d022feb5e21/src/ventilatorlstm.py
+[exp056_transformer]:https://www.kaggle.com/takamichitoda/ventilator-train-transformer-cls?scriptVersionId=76384697
+[exp058_dec_epoch]:xxx
+
 
 ## n_out
 fold-0
