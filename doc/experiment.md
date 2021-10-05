@@ -53,12 +53,14 @@
 |exp045_now_best||0.195|[post processing](https://www.kaggle.com/snnclsr/a-dummy-approach-to-improve-your-score-postprocess)|
 |exp045_mcnn|||良くないので途中で打ち切り|
 |[exp046_inc_epoch]||||
-|exp047_time_back|||fold-0=0.193|
+|exp047_time_back|||fold-0=0.1752, LB:0.193|
 |exp048_classify|||かなり良い(バグでテスト予測が作れなかった)|
 |exp049_transformer_cls||||
 |exp050_bce|||メモリオーバー|
 |exp051_lstm2|||層は多いほうがよさげ|
 |[exp052_cls_reg]||||
+
+
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
 [exp001_u_in_time]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75511345
