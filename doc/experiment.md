@@ -52,7 +52,7 @@
 |exp045_now_best||0.196|ensemble median|
 |exp045_now_best||0.195|[post processing](https://www.kaggle.com/snnclsr/a-dummy-approach-to-improve-your-score-postprocess)|
 |exp045_mcnn|||良くないので途中で打ち切り|
-|[exp046_inc_epoch]||||
+|[exp046_inc_epoch]|||fold-0=0.193|
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
 [exp001_u_in_time]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75511345
