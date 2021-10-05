@@ -57,7 +57,7 @@
 |exp048_classify|||かなり良い(バグでテスト予測が作れなかった)|
 |exp049_transformer_cls||||
 |exp050_bce|||メモリオーバー|
-|exp051_lstm2||||
+|exp051_lstm2|||層は多いほうがよさげ|
 |[exp052_cls_reg]||||
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
@@ -81,7 +81,7 @@
 [exp037_skip_conn]:https://github.com/trtd56/VentilatorPressurePrediction/blob/5c73c924d776b79e6be5c5af574adf9ea4919ea4/src/ventilatorlstm.py
 [exp040_lag6]:https://github.com/trtd56/VentilatorPressurePrediction/blob/b3093318367dbc89484cdf157484b2b5876ab87c/src/ventilatorlstm.py
 [exp046_inc_epoch]:https://github.com/trtd56/VentilatorPressurePrediction/tree/30d3d15444573bc502a4bc1790fe26a31754a751
-[exp052_cls_reg]:xxx
+[exp052_cls_reg]:https://github.com/trtd56/VentilatorPressurePrediction/blob/0e8a14fe1b7e7807848d99e293960d022feb5e21/src/ventilatorlstm.py
 
 ## n_out
 fold-0
