@@ -48,9 +48,9 @@
 |exp039_lstm6_222|||良くないので途中で打ち切り|
 |[exp040_lag6]|||良くないので途中で打ち切り|
 |exp041_log_w|||良くないので途中で打ち切り|
-|exp045_now_best||||
-|exp045_now_best|||ensemble median|
-|exp045_now_best|||[post processing](https://www.kaggle.com/snnclsr/a-dummy-approach-to-improve-your-score-postprocess)|
+|exp045_now_best||0.197||
+|exp045_now_best||0.196|ensemble median|
+|exp045_now_best||0.195|[post processing](https://www.kaggle.com/snnclsr/a-dummy-approach-to-improve-your-score-postprocess)|
 |exp045_mcnn|||良くないので途中で打ち切り|
 |[exp046_inc_epoch]||||
 
