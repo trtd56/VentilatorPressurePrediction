@@ -65,6 +65,8 @@
 |[exp056_transformer]||||
 |exp057_R_fix|||epoch=150, Overfit|
 |[exp058_dec_epoch]||||
+|exp059_dropout02||||
+
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
 [exp001_u_in_time]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75511345
