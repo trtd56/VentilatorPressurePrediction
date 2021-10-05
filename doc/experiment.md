@@ -64,7 +64,7 @@
 |exp055_dropout02||||
 |[exp056_transformer]||||
 |exp057_R_fix|||epoch=150, Overfit|
-|[exp058_dec_epoch]||||
+|[exp058_dec_epoch]|||fold-0=0.1889, LB:0.213|
 |exp059_dropout02||||
 
 
