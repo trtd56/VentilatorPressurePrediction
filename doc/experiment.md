@@ -93,5 +93,8 @@ fold-0
 
 ## ToDo
 - 平均との差など
-
 - u_in_cumsum window
+
+## Share
+- LIMEで特徴量
+- Dropout
