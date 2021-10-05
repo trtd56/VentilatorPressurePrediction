@@ -58,7 +58,7 @@ from sklearn.preprocessing import RobustScaler
 device = torch.device("cuda")
 
 class config:
-    EXP_NAME = "exp052_cls_reg"
+    EXP_NAME = "exp058_dec_epoch"
     
     INPUT = "/content/"
     OUTPUT = "/content/drive/MyDrive/Study/ventilator-pressure-prediction"
@@ -111,13 +111,10 @@ class VentilatorDataset(Dataset):
             label = [-1]
         else:
             label = [self.label_dic[i] for i in y]
-            #label = torch.stack([torch.eye(950)[self.label_dic[i]] for i in y])
 
         d = {
             "X": torch.tensor(X).float(),
-            "y": torch.tensor(y).float(),
-            "label" : torch.tensor(label).long(),
-            #"label" : torch.tensor(label).float(),
+            "y" : torch.tensor(label).long(),
         }
         return d
 
@@ -134,22 +131,16 @@ class VentilatorModel(nn.Module):
             nn.LayerNorm(config.EMBED_SIZE),
         )
         
-        self.lstm1 = nn.LSTM(config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
-        self.lstm2 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
-        self.lstm3 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
-        self.lstm4 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
+        self.lstm1 = nn.LSTM(config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True, dropout=0.0)
+        self.lstm2 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True, dropout=0.0)
+        self.lstm3 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True, dropout=0.0)
+        self.lstm4 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True, dropout=0.0)
 
-        self.head_cls = nn.Sequential(
+        self.head = nn.Sequential(
             nn.Linear(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE * 2),
             nn.LayerNorm(config.HIDDEN_SIZE * 2),
             nn.ReLU(),
             nn.Linear(config.HIDDEN_SIZE * 2, 950),
-        )
-        self.head_reg = nn.Sequential(
-            nn.Linear(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE * 2),
-            nn.LayerNorm(config.HIDDEN_SIZE * 2),
-            nn.ReLU(),
-            nn.Linear(config.HIDDEN_SIZE * 2, 1),
         )
         
         # Encoder
@@ -167,7 +158,7 @@ class VentilatorModel(nn.Module):
                     else:
                         nn.init.normal_(param.data)
 
-    def forward(self, X, y=None, label=None):
+    def forward(self, X, y=None):
         # embed
         bs = X.shape[0]
         r_emb = self.r_emb(X[:,:,0].long()).view(bs, 80, -1)
@@ -184,23 +175,19 @@ class VentilatorModel(nn.Module):
         out = torch.cat((out, emb_x), 2)
         out, (hn, cn) = self.lstm3(out, (hn, cn)) 
         out = torch.cat((out, emb_x), 2)
-        out, (hn, cn) = self.lstm4(out, (hn, cn)) 
+        out, (hn, cn) = self.lstm4(out, (hn, cn))
 
-        cls = self.head_cls(out)
-        reg = self.head_reg(out)
+        logits = self.head(out)
 
         if y is None:
             loss = None
         else:
-            loss = self.loss_fn(cls, reg.squeeze(2), label, y)
+            loss = self.loss_fn(logits, y)
             
-        return cls, loss
+        return logits, loss
     
-    def loss_fn(self, y_pred_cls, y_pred_reg, y_true_cls, y_true_reg):
-        reg_loss = nn.L1Loss()(y_pred_reg, y_true_reg)
-        cls_loss = nn.CrossEntropyLoss()(y_pred_cls.reshape(-1, 950), y_true_cls.reshape(-1))
-        #loss = nn.BCEWithLogitsLoss()(y_pred, y_true)
-        loss = (reg_loss + cls_loss) / 2
+    def loss_fn(self, y_pred, y_true):
+        loss = nn.CrossEntropyLoss()(y_pred.reshape(-1, 950), y_true.reshape(-1))
         return loss
 
 def train_loop(model, optimizer, scheduler, loader):
@@ -208,7 +195,7 @@ def train_loop(model, optimizer, scheduler, loader):
     model.train()
     optimizer.zero_grad()
     for d in loader:
-        out, loss = model(d['X'].to(device), d['y'].to(device), d['label'].to(device))
+        out, loss = model(d['X'].to(device), d['y'].to(device))
         
         losses.append(loss.item())
         step_lr = np.array([param_group["lr"] for param_group in optimizer.param_groups]).mean()
@@ -226,12 +213,11 @@ def valid_loop(model, loader, target_dic_inv):
     model.eval()
     for d in loader:
         with torch.no_grad():
-            out, loss = model(d['X'].to(device), d['y'].to(device), d['label'].to(device))
+            out, loss = model(d['X'].to(device), d['y'].to(device))
         out = torch.tensor([[target_dic_inv[j.item()] for j in i] for i in out.argmax(2)])
         losses.append(loss.item())
         predicts.append(out.cpu())
 
-    #return np.array(losses).mean(), torch.vstack(predicts).squeeze(2).numpy().reshape(-1)
     return np.array(losses).mean(), torch.vstack(predicts).numpy().reshape(-1)
 
 def test_loop(model, loader, target_dic_inv):
@@ -243,7 +229,6 @@ def test_loop(model, loader, target_dic_inv):
         out = torch.tensor([[target_dic_inv[j.item()] for j in i] for i in out.argmax(2)])
         predicts.append(out.cpu())
 
-    #return torch.vstack(predicts).squeeze(2).numpy().reshape(-1)
     return torch.vstack(predicts).numpy().reshape(-1)
 
 def add_feature(df):
@@ -294,7 +279,7 @@ rc_dot_dic = {v: i for i, v in enumerate([50, 100, 200, 250, 400, 500, 2500, 100
 
 def add_category_features(df):
     df['C_cate'] = df['C'].map(c_dic)
-    df['R_cate'] = df['R'].map(c_dic)
+    df['R_cate'] = df['R'].map(r_dic)
     df['RC_sum'] = (df['R'] + df['C']).map(rc_sum_dic)
     df['RC_dot'] = (df['R'] * df['C']).map(rc_dot_dic)
     return df
