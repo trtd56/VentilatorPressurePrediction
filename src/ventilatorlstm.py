@@ -58,7 +58,7 @@ from sklearn.preprocessing import RobustScaler
 device = torch.device("cuda")
 
 class config:
-    EXP_NAME = "exp046_inc_epoch"
+    EXP_NAME = "exp052_cls_reg"
     
     INPUT = "/content/"
     OUTPUT = "/content/drive/MyDrive/Study/ventilator-pressure-prediction"
@@ -66,7 +66,7 @@ class config:
     SEED = 0
     
     LR = 5e-3
-    N_EPOCHS = 150
+    N_EPOCHS = 50
     EMBED_SIZE = 64
     HIDDEN_SIZE = 256
     BS = 512
@@ -74,11 +74,12 @@ class config:
 
     USE_LAG = 4
     CATE_FEATURES = ['R_cate', 'C_cate', 'RC_dot', 'RC_sum']
-    CONT_FEATURES = ['u_in', 'u_out', 'time_step'] + ['u_in_cumsum', 'area', 'cross', 'cross2']
-    LAG_FEATURES = ['breath_time'] #, 'delta_time', 'area_u_in', 'area_u_in_abs', 'uin_in_time']
+    CONT_FEATURES = ['u_in', 'u_out', 'time_step'] + ['u_in_cumsum', 'u_in_cummean', 'area', 'cross', 'cross2']
+    LAG_FEATURES = ['breath_time']
     LAG_FEATURES += [f'u_in_lag_{i}' for i in range(1, USE_LAG+1)]
     LAG_FEATURES += [f'u_in_lag_{i}_back' for i in range(1, USE_LAG+1)]
     LAG_FEATURES += [f'u_in_time{i}' for i in range(1, USE_LAG+1)]
+    LAG_FEATURES += [f'u_in_time{i}_back' for i in range(1, USE_LAG+1)]
     ALL_FEATURES = CATE_FEATURES + CONT_FEATURES + LAG_FEATURES
     
     NOT_WATCH_PARAM = ['INPUT']
@@ -95,8 +96,9 @@ def set_seed(seed=config.SEED):
 
 class VentilatorDataset(Dataset):
     
-    def __init__(self, df):
+    def __init__(self, df, label_dic=None):
         self.dfs = [_df for _, _df in df.groupby("breath_id")]
+        self.label_dic = label_dic
         
     def __len__(self):
         return len(self.dfs)
@@ -105,9 +107,17 @@ class VentilatorDataset(Dataset):
         df = self.dfs[item]
         X = df[config.ALL_FEATURES].values
         y = df['pressure'].values
+        if self.label_dic is None:
+            label = [-1]
+        else:
+            label = [self.label_dic[i] for i in y]
+            #label = torch.stack([torch.eye(950)[self.label_dic[i]] for i in y])
+
         d = {
             "X": torch.tensor(X).float(),
             "y": torch.tensor(y).float(),
+            "label" : torch.tensor(label).long(),
+            #"label" : torch.tensor(label).float(),
         }
         return d
 
@@ -129,7 +139,13 @@ class VentilatorModel(nn.Module):
         self.lstm3 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
         self.lstm4 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True)
 
-        self.head = nn.Sequential(
+        self.head_cls = nn.Sequential(
+            nn.Linear(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE * 2),
+            nn.LayerNorm(config.HIDDEN_SIZE * 2),
+            nn.ReLU(),
+            nn.Linear(config.HIDDEN_SIZE * 2, 950),
+        )
+        self.head_reg = nn.Sequential(
             nn.Linear(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE * 2),
             nn.LayerNorm(config.HIDDEN_SIZE * 2),
             nn.ReLU(),
@@ -151,7 +167,7 @@ class VentilatorModel(nn.Module):
                     else:
                         nn.init.normal_(param.data)
 
-    def forward(self, X, y=None):
+    def forward(self, X, y=None, label=None):
         # embed
         bs = X.shape[0]
         r_emb = self.r_emb(X[:,:,0].long()).view(bs, 80, -1)
@@ -170,21 +186,21 @@ class VentilatorModel(nn.Module):
         out = torch.cat((out, emb_x), 2)
         out, (hn, cn) = self.lstm4(out, (hn, cn)) 
 
-        regr = self.head(out)
+        cls = self.head_cls(out)
+        reg = self.head_reg(out)
 
         if y is None:
             loss = None
         else:
-            loss = self.loss_fn(regr.squeeze(2), y)
+            loss = self.loss_fn(cls, reg.squeeze(2), label, y)
             
-        return regr, loss
+        return cls, loss
     
-    def loss_fn(self, y_pred, y_true):
-        loss = nn.L1Loss()(y_pred, y_true)
-        #loss_w = (5 + torch.tensor([(i+1) / 80 for i in range(80)]).log()) / 5
-        #loss_w = loss_w.to(device)
-        #loss = nn.L1Loss(reduction='none')(y_pred, y_true)
-        #loss = (loss * loss_w).mean()
+    def loss_fn(self, y_pred_cls, y_pred_reg, y_true_cls, y_true_reg):
+        reg_loss = nn.L1Loss()(y_pred_reg, y_true_reg)
+        cls_loss = nn.CrossEntropyLoss()(y_pred_cls.reshape(-1, 950), y_true_cls.reshape(-1))
+        #loss = nn.BCEWithLogitsLoss()(y_pred, y_true)
+        loss = (reg_loss + cls_loss) / 2
         return loss
 
 def train_loop(model, optimizer, scheduler, loader):
@@ -192,7 +208,7 @@ def train_loop(model, optimizer, scheduler, loader):
     model.train()
     optimizer.zero_grad()
     for d in loader:
-        out, loss = model(d['X'].to(device), d['y'].to(device))
+        out, loss = model(d['X'].to(device), d['y'].to(device), d['label'].to(device))
         
         losses.append(loss.item())
         step_lr = np.array([param_group["lr"] for param_group in optimizer.param_groups]).mean()
@@ -205,26 +221,30 @@ def train_loop(model, optimizer, scheduler, loader):
 
     return np.array(losses).mean(), np.array(lrs).mean()
 
-def valid_loop(model, loader):
+def valid_loop(model, loader, target_dic_inv):
     losses, predicts = [], []
     model.eval()
     for d in loader:
         with torch.no_grad():
-            out, loss = model(d['X'].to(device), d['y'].to(device))
+            out, loss = model(d['X'].to(device), d['y'].to(device), d['label'].to(device))
+        out = torch.tensor([[target_dic_inv[j.item()] for j in i] for i in out.argmax(2)])
         losses.append(loss.item())
         predicts.append(out.cpu())
 
-    return np.array(losses).mean(), torch.vstack(predicts).squeeze(2).numpy().reshape(-1)
+    #return np.array(losses).mean(), torch.vstack(predicts).squeeze(2).numpy().reshape(-1)
+    return np.array(losses).mean(), torch.vstack(predicts).numpy().reshape(-1)
 
-def test_loop(model, loader):
+def test_loop(model, loader, target_dic_inv):
     predicts = []
     model.eval()
     for d in loader:
         with torch.no_grad():
             out, _ = model(d['X'].to(device))
+        out = torch.tensor([[target_dic_inv[j.item()] for j in i] for i in out.argmax(2)])
         predicts.append(out.cpu())
 
-    return torch.vstack(predicts).squeeze(2).numpy().reshape(-1)
+    #return torch.vstack(predicts).squeeze(2).numpy().reshape(-1)
+    return torch.vstack(predicts).numpy().reshape(-1)
 
 def add_feature(df):
     df['time_delta'] = df.groupby('breath_id')['time_step'].diff().fillna(0)
@@ -237,7 +257,7 @@ def add_feature(df):
     df['u_in_cumsum'] = (df['u_in']).groupby(df['breath_id']).cumsum()
     df['one'] = 1
     df['count'] = (df['one']).groupby(df['breath_id']).cumsum()
-    #df['u_in_cummean'] =df['u_in_cumsum'] / df['count']
+    df['u_in_cummean'] =df['u_in_cumsum'] / df['count']
     
     df = df.drop(['count','one'], axis=1)
     return df
@@ -252,16 +272,11 @@ def add_lag_feature(df):
         df[f'u_in_lag_{lag}'] = df['u_in'].shift(lag).fillna(0) * df[f'breath_id_lag{lag}same']
         df[f'u_in_lag_{lag}_back'] = df['u_in'].shift(-lag).fillna(0) * df[f'breath_id_lag{lag}same']
         df[f'u_in_time{lag}'] = df['u_in'] - df[f'u_in_lag_{lag}']
+        df[f'u_in_time{lag}_back'] = df['u_in'] - df[f'u_in_lag_{lag}_back']
 
     # breath_time
     df['time_step_lag'] = df['time_step'].shift(1).fillna(0) * df[f'breath_id_lag{lag}same']
     df['breath_time'] = df['time_step'] - df['time_step_lag']
-
-    # https://www.kaggle.com/c/ventilator-pressure-prediction/discussion/273974#1527377
-    #df['delta_time'] = df['time_step'].shift(-1, fill_value=0) - df['time_step']
-    #df['area_u_in'] = df['u_in'] * df['delta_time']
-    #df['area_u_in_abs'] = df['u_in_lag_1'] * df['delta_time']
-    #df['uin_in_time'] = df['u_in_lag_1'] / df['delta_time']
 
     drop_columns = ['time_step_lag']
     drop_columns += [f'breath_id_lag{i}' for i in range(1, config.USE_LAG+1)]
@@ -301,6 +316,9 @@ def main():
     oof = np.zeros(len(train_df))
     test_preds_lst = []
 
+    target_dic = {v:i for i, v in enumerate(sorted(train_df['pressure'].unique().tolist()))}
+    target_dic_inv = {v: k for k, v in target_dic.items()}
+
     gkf = GroupKFold(n_splits=config.N_FOLD).split(train_df, train_df.pressure, groups=train_df.breath_id)
     for fold, (_, valid_idx) in enumerate(gkf):
         train_df.loc[valid_idx, 'fold'] = fold
@@ -320,8 +338,8 @@ def main():
     
     for fold in range(config.N_FOLD):
         print(f'Fold-{fold}')
-        train_dset = VentilatorDataset(train_df.query(f"fold!={fold}"))
-        valid_dset = VentilatorDataset(train_df.query(f"fold=={fold}"))
+        train_dset = VentilatorDataset(train_df.query(f"fold!={fold}"), target_dic)
+        valid_dset = VentilatorDataset(train_df.query(f"fold=={fold}"), target_dic)
 
         set_seed()
         train_loader = DataLoader(train_dset, batch_size=config.BS,
@@ -355,7 +373,7 @@ def main():
         valid_best_score_mask = float('inf')
         for epoch in tqdm(range(config.N_EPOCHS)):
             train_loss, lrs = train_loop(model, optimizer, scheduler, train_loader)
-            valid_loss, valid_predict = valid_loop(model, valid_loader)
+            valid_loss, valid_predict = valid_loop(model, valid_loader, target_dic_inv)
             valid_score = np.abs(valid_predict - train_df.query(f"fold=={fold}")['pressure'].values).mean()
 
             mask = (train_df.query(f"fold=={fold}")['u_out'] == 0).values
@@ -384,7 +402,7 @@ def main():
             gc.collect()
         
         model.load_state_dict(torch.load(model_path))
-        test_preds = test_loop(model, test_loader)
+        test_preds = test_loop(model, test_loader, target_dic_inv)
         test_preds_lst.append(test_preds)
         
         sub_df['pressure'] = test_preds
@@ -410,5 +428,9 @@ def main():
 if __name__ == "__main__":
     main()
 
+
+
 wandb.finish()
+
+
 
