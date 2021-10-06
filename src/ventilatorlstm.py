@@ -58,7 +58,7 @@ from sklearn.preprocessing import RobustScaler
 device = torch.device("cuda")
 
 class config:
-    EXP_NAME = "exp058_dec_epoch"
+    EXP_NAME = "exp065_ord_reg"
     
     INPUT = "/content/"
     OUTPUT = "/content/drive/MyDrive/Study/ventilator-pressure-prediction"
@@ -70,7 +70,7 @@ class config:
     EMBED_SIZE = 64
     HIDDEN_SIZE = 256
     BS = 512
-    WEIGHT_DECAY = 1e-5
+    WEIGHT_DECAY = 1e-3
 
     USE_LAG = 4
     CATE_FEATURES = ['R_cate', 'C_cate', 'RC_dot', 'RC_sum']
@@ -80,6 +80,8 @@ class config:
     LAG_FEATURES += [f'u_in_lag_{i}_back' for i in range(1, USE_LAG+1)]
     LAG_FEATURES += [f'u_in_time{i}' for i in range(1, USE_LAG+1)]
     LAG_FEATURES += [f'u_in_time{i}_back' for i in range(1, USE_LAG+1)]
+    LAG_FEATURES += [f'u_out_lag_{i}' for i in range(1, USE_LAG+1)]
+    LAG_FEATURES += [f'u_out_lag_{i}_back' for i in range(1, USE_LAG+1)]
     ALL_FEATURES = CATE_FEATURES + CONT_FEATURES + LAG_FEATURES
     
     NOT_WATCH_PARAM = ['INPUT']
@@ -118,6 +120,11 @@ class VentilatorDataset(Dataset):
         }
         return d
 
+ohe = F.one_hot(torch.tensor(list(range(950))), 950)
+for i in range(950):
+    ohe[i, :ohe[i, :].argmax()] = 1
+ohe = ohe[:, 1:].to(device)
+
 class VentilatorModel(nn.Module):
     
     def __init__(self):
@@ -131,22 +138,26 @@ class VentilatorModel(nn.Module):
             nn.LayerNorm(config.EMBED_SIZE),
         )
         
-        self.lstm1 = nn.LSTM(config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True, dropout=0.0)
-        self.lstm2 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True, dropout=0.0)
-        self.lstm3 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True, dropout=0.0)
-        self.lstm4 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True, dropout=0.0)
+        self.lstm1 = nn.LSTM(config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True, dropout=0.2)
+        self.lstm2 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True, dropout=0.2)
+        self.lstm3 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True, dropout=0.2)
+        self.lstm4 = nn.LSTM(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True, dropout=0.2)
+
+        self.dropouts = nn.ModuleList([nn.Dropout(0.2) for _ in range(8)])
 
         self.head = nn.Sequential(
             nn.Linear(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE * 2),
             nn.LayerNorm(config.HIDDEN_SIZE * 2),
             nn.ReLU(),
-            nn.Linear(config.HIDDEN_SIZE * 2, 950),
+            nn.Linear(config.HIDDEN_SIZE * 2, 950-1),
         )
         
         # Encoder
         initrange = 0.1
         self.r_emb.weight.data.uniform_(-initrange, initrange)
         self.c_emb.weight.data.uniform_(-initrange, initrange)
+        self.rc_dot_emb.weight.data.uniform_(-initrange, initrange)
+        self.rc_sum_emb.weight.data.uniform_(-initrange, initrange)
         
         # LSTM
         for n, m in self.named_modules():
@@ -177,7 +188,7 @@ class VentilatorModel(nn.Module):
         out = torch.cat((out, emb_x), 2)
         out, (hn, cn) = self.lstm4(out, (hn, cn))
 
-        logits = self.head(out)
+        logits = sum([self.head(dropout(out)) for dropout in self.dropouts])/8
 
         if y is None:
             loss = None
@@ -187,7 +198,10 @@ class VentilatorModel(nn.Module):
         return logits, loss
     
     def loss_fn(self, y_pred, y_true):
-        loss = nn.CrossEntropyLoss()(y_pred.reshape(-1, 950), y_true.reshape(-1))
+        #loss = nn.CrossEntropyLoss()(y_pred.reshape(-1, 950), y_true.reshape(-1))
+        bs = y_true.shape[0]
+        target = ohe[y_true.reshape(-1)].reshape((bs, 80, 950-1)).float()
+        loss = nn.BCEWithLogitsLoss()(y_pred, target)
         return loss
 
 def train_loop(model, optimizer, scheduler, loader):
@@ -214,7 +228,8 @@ def valid_loop(model, loader, target_dic_inv):
     for d in loader:
         with torch.no_grad():
             out, loss = model(d['X'].to(device), d['y'].to(device))
-        out = torch.tensor([[target_dic_inv[j.item()] for j in i] for i in out.argmax(2)])
+        #out = torch.tensor([[target_dic_inv[j.item()] for j in i] for i in out.argmax(2)])
+        out = torch.tensor([[target_dic_inv[j.item()-1] for j in i] for i in (out > 0.5).sum(2)])
         losses.append(loss.item())
         predicts.append(out.cpu())
 
@@ -226,7 +241,8 @@ def test_loop(model, loader, target_dic_inv):
     for d in loader:
         with torch.no_grad():
             out, _ = model(d['X'].to(device))
-        out = torch.tensor([[target_dic_inv[j.item()] for j in i] for i in out.argmax(2)])
+        #out = torch.tensor([[target_dic_inv[j.item()] for j in i] for i in out.argmax(2)])
+        out = torch.tensor([[target_dic_inv[j.item()-1] for j in i] for i in (out > 0.5).sum(2)])
         predicts.append(out.cpu())
 
     return torch.vstack(predicts).numpy().reshape(-1)
@@ -258,6 +274,8 @@ def add_lag_feature(df):
         df[f'u_in_lag_{lag}_back'] = df['u_in'].shift(-lag).fillna(0) * df[f'breath_id_lag{lag}same']
         df[f'u_in_time{lag}'] = df['u_in'] - df[f'u_in_lag_{lag}']
         df[f'u_in_time{lag}_back'] = df['u_in'] - df[f'u_in_lag_{lag}_back']
+        df[f'u_out_lag_{lag}'] = df['u_out'].shift(lag).fillna(0) * df[f'breath_id_lag{lag}same']
+        df[f'u_out_lag_{lag}_back'] = df['u_out'].shift(-lag).fillna(0) * df[f'breath_id_lag{lag}same']
 
     # breath_time
     df['time_step_lag'] = df['time_step'].shift(1).fillna(0) * df[f'breath_id_lag{lag}same']
@@ -412,8 +430,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
 
 wandb.finish()
 
