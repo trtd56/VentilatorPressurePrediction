@@ -58,7 +58,7 @@ from sklearn.preprocessing import RobustScaler
 device = torch.device("cuda")
 
 class config:
-    EXP_NAME = "exp065_ord_reg"
+    EXP_NAME = "exp066_fix_idx"
     
     INPUT = "/content/"
     OUTPUT = "/content/drive/MyDrive/Study/ventilator-pressure-prediction"
@@ -222,6 +222,12 @@ def train_loop(model, optimizer, scheduler, loader):
 
     return np.array(losses).mean(), np.array(lrs).mean()
 
+def get_idx(out):
+    if sum(out) == 0:
+        return 0
+    else:
+        return torch.tensor(range(949))[out].max() + 1
+
 def valid_loop(model, loader, target_dic_inv):
     losses, predicts = [], []
     model.eval()
@@ -229,7 +235,8 @@ def valid_loop(model, loader, target_dic_inv):
         with torch.no_grad():
             out, loss = model(d['X'].to(device), d['y'].to(device))
         #out = torch.tensor([[target_dic_inv[j.item()] for j in i] for i in out.argmax(2)])
-        out = torch.tensor([[target_dic_inv[j.item()-1] for j in i] for i in (out > 0.5).sum(2)])
+        #out = torch.tensor([[target_dic_inv[j.item()-1] for j in i] for i in (out > 0.5).sum(2)])
+        out = torch.tensor([[target_dic_inv[get_idx(out[i][j] > 0.5)] for j in range(80)] for i in range(out.shape[0])])
         losses.append(loss.item())
         predicts.append(out.cpu())
 
@@ -242,7 +249,8 @@ def test_loop(model, loader, target_dic_inv):
         with torch.no_grad():
             out, _ = model(d['X'].to(device))
         #out = torch.tensor([[target_dic_inv[j.item()] for j in i] for i in out.argmax(2)])
-        out = torch.tensor([[target_dic_inv[j.item()-1] for j in i] for i in (out > 0.5).sum(2)])
+        #out = torch.tensor([[target_dic_inv[j.item()-1] for j in i] for i in (out > 0.5).sum(2)])
+        out = torch.tensor([[target_dic_inv[get_idx(out[i][j] > 0.5)] for j in range(80)] for i in range(out.shape[0])])
         predicts.append(out.cpu())
 
     return torch.vstack(predicts).numpy().reshape(-1)
