@@ -8,13 +8,16 @@
 |exp047_time_back|0.1752|0.193|fold-0のみ, 150 epoch|
 |exp064_out_back|0.1873|0.212|fold-0のみ|
 |exp069_no_back|0.1813|0.203|fold-0のみ|
-|exp070_no_skip||||
+|exp070_no_skip|0.1767|0.198|fold-0のみ|
+|exp071_no_dropout|||fold-0のみ|
+|[exp072_rolling]||||
 
 ## ToDo
 - 特徴量増やしていく
   - 平均との差など
-  - u_in_cumsum window
 
 
 ## Share
 - LIMEで特徴量: https://www.kaggle.com/takamichitoda/ventilator-lime/edit
+
+[exp072_rolling]:https://github.com/trtd56/VentilatorPressurePrediction/blob/03a0f142a306d867fc6cb730c2804ba642e22806/src/ventilatorlstm.py
