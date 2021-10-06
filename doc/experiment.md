@@ -7,21 +7,25 @@
 |exp045_now_best||0.195|post processing & median|
 |exp047_time_back|0.1752|0.193|fold-0のみ, 150 epoch|
 |exp064_out_back|0.1873|0.212|fold-0のみ|
+|[exp068_categorical]|||CV|
 |exp069_no_back|0.1813|0.203|fold-0のみ|
 |exp070_no_skip|0.1767|0.198|fold-0のみ|
 |exp071_no_dropout|||fold-0のみ|
 |[exp072_rolling]|||fold-0のみ, 特徴量は別で計算したほうが良さそう|
 |[exp073_bce_smooth]||fold-0のみ,　あまり良くない|
+|[exp074_layer5]|0.1704|0.157||
+
 
 
 ## ToDo
 - 特徴量増やしていく
   - 平均との差など(u_outに依存する部分があるので効かなそう)
-
+- u_outを0/1に(0/1を入れ替えたほうがいいかも)
 
 ## Share
 - LIMEで特徴量: https://www.kaggle.com/takamichitoda/ventilator-lime/edit
 
+[exp068_categorical]:https://www.kaggle.com/takamichitoda/ventilator-train-classification/notebook?scriptVersionId=76446772
 [exp072_rolling]:https://github.com/trtd56/VentilatorPressurePrediction/blob/03a0f142a306d867fc6cb730c2804ba642e22806/src/ventilatorlstm.py
 [exp073_bce_smooth]:https://github.com/trtd56/VentilatorPressurePrediction/blob/e0e9e2deed91d82bfe3c482209024de209487515/src/ventilatorlstm.py
 
