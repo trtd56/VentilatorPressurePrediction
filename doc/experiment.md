@@ -72,7 +72,7 @@
 |exp063_no_bi||||
 |exp064_out_back|||fold-0=0.212|
 |exp065_bce||||
-|exp065_ord_reg||||
+|[exp065_ord_reg]||||
 
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
@@ -99,7 +99,7 @@
 [exp052_cls_reg]:https://github.com/trtd56/VentilatorPressurePrediction/blob/0e8a14fe1b7e7807848d99e293960d022feb5e21/src/ventilatorlstm.py
 [exp056_transformer]:https://www.kaggle.com/takamichitoda/ventilator-train-transformer-cls?scriptVersionId=76384697
 [exp058_dec_epoch]:https://github.com/trtd56/VentilatorPressurePrediction/blob/0ff8e0d8578be727229ddc433c5c13d22d0a2642/src/ventilatorlstm.py
-
+[exp065_ord_reg]:https://github.com/trtd56/VentilatorPressurePrediction/blob/a9061790c16d84673ab921658f3a1ab49da80c2e/src/ventilatorlstm.py
 
 ## n_out
 fold-0
@@ -112,8 +112,6 @@ fold-0
 ## ToDo
 - 平均との差など
 - u_in_cumsum window
-- u_out_diff
 
 ## Share
 - LIMEで特徴量
-- Dropout
