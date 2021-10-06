@@ -11,7 +11,7 @@
 |exp069_no_back|0.1813|0.203|fold-0のみ|
 |exp070_no_skip|0.1767|0.198|fold-0のみ|
 |exp071_no_dropout|||fold-0のみ|
-|[exp072_rolling]|||fold-0のみ, 特徴量は別で計算したほうが良さそう|
+|[exp072_rolling]|0.1729||fold-0のみ, 特徴量は別で計算したほうが良さそう|
 |[exp073_bce_smooth]||fold-0のみ,　あまり良くない|
 |[exp074_layer5]|0.1704|0.157||
 
