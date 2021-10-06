@@ -15,4 +15,4 @@
 - LSTMスキップなし
 
 ## Share
-- LIMEで特徴量
+- LIMEで特徴量: https://www.kaggle.com/takamichitoda/ventilator-lime/edit
