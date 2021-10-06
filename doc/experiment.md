@@ -100,7 +100,7 @@
 [exp056_transformer]:https://www.kaggle.com/takamichitoda/ventilator-train-transformer-cls?scriptVersionId=76384697
 [exp058_dec_epoch]:https://github.com/trtd56/VentilatorPressurePrediction/blob/0ff8e0d8578be727229ddc433c5c13d22d0a2642/src/ventilatorlstm.py
 [exp065_ord_reg]:https://github.com/trtd56/VentilatorPressurePrediction/blob/a9061790c16d84673ab921658f3a1ab49da80c2e/src/ventilatorlstm.py
-[exp066_fix_idx]:xxx
+[exp066_fix_idx]:https://github.com/trtd56/VentilatorPressurePrediction/blob/18c1e5b239a1999c3bba8a120f4be10b3e115713/src/ventilatorlstm.py
 
 ## n_out
 fold-0
