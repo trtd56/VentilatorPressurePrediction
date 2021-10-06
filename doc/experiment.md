@@ -66,6 +66,13 @@
 |exp057_R_fix|||epoch=150, Overfit|
 |[exp058_dec_epoch]|||fold-0=0.1889, LB:0.213|
 |exp059_dropout02||||
+|exp060_dropout05||||
+|exp061_msd||||
+|exp062_layer2||||
+|exp063_no_bi||||
+|exp064_out_back|||fold-0=0.212|
+|exp065_bce||||
+|exp065_ord_reg||||
 
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
