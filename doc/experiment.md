@@ -10,8 +10,8 @@
 |exp069_no_back|0.1813|0.203|fold-0のみ|
 |exp070_no_skip|0.1767|0.198|fold-0のみ|
 |exp071_no_dropout|||fold-0のみ|
-|[exp072_rolling]||||
-|[exp073_bce_smooth]|||
+|[exp072_rolling]|||fold-0のみ, 特徴量は別で計算したほうが良さそう|
+|[exp073_bce_smooth]||fold-0のみ,　あまり良くない|
 
 
 ## ToDo
@@ -23,5 +23,5 @@
 - LIMEで特徴量: https://www.kaggle.com/takamichitoda/ventilator-lime/edit
 
 [exp072_rolling]:https://github.com/trtd56/VentilatorPressurePrediction/blob/03a0f142a306d867fc6cb730c2804ba642e22806/src/ventilatorlstm.py
-[exp073_bce_smooth]:xxx
+[exp073_bce_smooth]:https://github.com/trtd56/VentilatorPressurePrediction/blob/e0e9e2deed91d82bfe3c482209024de209487515/src/ventilatorlstm.py
 
