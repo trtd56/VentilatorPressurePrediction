@@ -73,7 +73,7 @@
 |exp064_out_back|||fold-0=0.212|
 |exp065_bce||||
 |[exp065_ord_reg]||||
-
+|[exp066_fix_idx]||||
 
 [exp000_starter]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75438952
 [exp001_u_in_time]:https://www.kaggle.com/takamichitoda/ventilator-lstm-starter?scriptVersionId=75511345
@@ -100,6 +100,7 @@
 [exp056_transformer]:https://www.kaggle.com/takamichitoda/ventilator-train-transformer-cls?scriptVersionId=76384697
 [exp058_dec_epoch]:https://github.com/trtd56/VentilatorPressurePrediction/blob/0ff8e0d8578be727229ddc433c5c13d22d0a2642/src/ventilatorlstm.py
 [exp065_ord_reg]:https://github.com/trtd56/VentilatorPressurePrediction/blob/a9061790c16d84673ab921658f3a1ab49da80c2e/src/ventilatorlstm.py
+[exp066_fix_idx]:xxx
 
 ## n_out
 fold-0
