@@ -11,6 +11,8 @@
 - 特徴量増やしていく
   - 平均との差など
   - u_in_cumsum window
+- lag back 消す
+- LSTMスキップなし
 
 ## Share
 - LIMEで特徴量
