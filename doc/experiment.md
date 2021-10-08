@@ -28,7 +28,7 @@
 - u_outを0/1に(0/1を入れ替えたほうがいいかも)
 - RとCごとにLSTM
 - backも使える？
-
+- norm消す（回帰？）
 ## Share
 - LIMEで特徴量: https://www.kaggle.com/takamichitoda/ventilator-lime/edit
 
