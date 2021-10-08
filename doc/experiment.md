@@ -18,8 +18,8 @@
 |[exp072_rolling]|0.1729|0.187|fold-0のみ, 特徴量は別で計算したほうが良さそう|
 |[exp073_bce_smooth]||fold-0のみ,　あまり良くない|
 |exp074_layer5|0.1704|0.157||
-|[exp075_dropout0]|||median_pp|
-|[exp075_dropout0]|||mean_pp|
+|[exp075_dropout0]|0.1708|0.155|median_pp|
+|[exp075_dropout0]|0.1708||mean_pp|
 |[exp076_transformer]||||
 |[exp077_divide_rc]|0.2724||fold-0のみ, 良くない|
 |[exp077_divide_r]|0.2034||fold-0のみ, 良くない|
