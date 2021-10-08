@@ -18,7 +18,7 @@
 |[exp072_rolling]|0.1729|0.187|fold-0のみ, 特徴量は別で計算したほうが良さそう|
 |[exp073_bce_smooth]||fold-0のみ,　あまり良くない|
 |exp074_layer5|0.1704|0.157||
-
+|[exp076_transformer]||||
 
 
 ## ToDo
@@ -34,4 +34,4 @@
 [exp068_categorical]:https://www.kaggle.com/takamichitoda/ventilator-train-classification/notebook?scriptVersionId=76446772
 [exp072_rolling]:https://github.com/trtd56/VentilatorPressurePrediction/blob/03a0f142a306d867fc6cb730c2804ba642e22806/src/ventilatorlstm.py
 [exp073_bce_smooth]:https://github.com/trtd56/VentilatorPressurePrediction/blob/e0e9e2deed91d82bfe3c482209024de209487515/src/ventilatorlstm.py
-
+[exp076_transformer]:xxx
