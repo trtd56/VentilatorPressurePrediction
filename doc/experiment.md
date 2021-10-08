@@ -24,7 +24,7 @@
 |[exp077_divide_rc]|0.2724||fold-0のみ, 良くない|
 |[exp077_divide_r]|0.2034||fold-0のみ, 良くない|
 |exp078_transformer|||良くない|
-|exp079_smooth||||
+|exp079_smooth|0.1694|||
 |[exp080_conti_rc]||||
 |exp081_smooth02||||
 
@@ -45,4 +45,4 @@
 [exp076_transformer]:https://github.com/trtd56/VentilatorPressurePrediction/blob/4fb4c6e244c749bbe5ee35da2bb6a01fef5b5815/src/ventilatorlstm.py
 [exp077_divide_rc]:https://www.kaggle.com/takamichitoda/ventilator-train-divide-r-c/notebook?scriptVersionId=76613957
 [exp077_divide_r]:https://www.kaggle.com/takamichitoda/ventilator-train-divide-r-c?scriptVersionId=76621692
-[exp080_conti_rc]:https://www.kaggle.com/takamichitoda/ventilator-train-classification?scriptVersionId=76623090
+[exp080_conti_rc]:https://www.kaggle.com/takamichitoda/ventilator-train-classification?scriptVersionId=76624771
