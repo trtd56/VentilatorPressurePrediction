@@ -21,9 +21,10 @@
 |[exp075_dropout0]||||
 |[exp076_transformer]||||
 |[exp077_divide_rc]|0.2724||fold-0のみ|
+|[exp077_divide_r]|0.2034||fold-0のみ|
 |exp078_transformer|||良くない|
 |exp079_smooth||||
-
+|exp079_smooth||||
 
 
 ## ToDo
@@ -32,6 +33,7 @@
 - u_outを0/1に(0/1を入れ替えたほうがいいかも)
 - backも使える？
 - norm消す（回帰？）
+- r,cを連続値に
 
 ## Share
 - LIMEで特徴量: https://www.kaggle.com/takamichitoda/ventilator-lime/edit
@@ -42,3 +44,4 @@
 [exp075_dropout0]:https://www.kaggle.com/takamichitoda/ventilator-train-classification?scriptVersionId=76597714
 [exp076_transformer]:https://github.com/trtd56/VentilatorPressurePrediction/blob/4fb4c6e244c749bbe5ee35da2bb6a01fef5b5815/src/ventilatorlstm.py
 [exp077_divide_rc]:https://www.kaggle.com/takamichitoda/ventilator-train-divide-r-c/notebook?scriptVersionId=76613957
+[exp077_divide_r]:https://www.kaggle.com/takamichitoda/ventilator-train-divide-r-c?scriptVersionId=76621692
