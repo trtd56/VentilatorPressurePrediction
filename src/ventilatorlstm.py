@@ -58,7 +58,7 @@ from sklearn.preprocessing import RobustScaler
 device = torch.device("cuda")
 
 class config:
-    EXP_NAME = "exp073_bce_smooth"
+    EXP_NAME = "exp076_transformer"
     
     INPUT = "/content/"
     OUTPUT = "/content/drive/MyDrive/Study/ventilator-pressure-prediction"
@@ -73,7 +73,7 @@ class config:
     WEIGHT_DECAY = 1e-3
 
     USE_LAG = 4
-    #ROLLING = [2, 4, 8]
+    ROLLING = [2, 4, 8]
 
     CATE_FEATURES = ['R_cate', 'C_cate', 'RC_dot', 'RC_sum']
     CONT_FEATURES = ['u_in', 'u_out', 'time_step'] + ['u_in_cumsum', 'u_in_cummean', 'area', 'cross', 'cross2']
@@ -81,10 +81,10 @@ class config:
     LAG_FEATURES += [f'u_in_lag_{i}' for i in range(1, USE_LAG+1)]
     LAG_FEATURES += [f'u_in_time{i}' for i in range(1, USE_LAG+1)]
     LAG_FEATURES += [f'u_out_lag_{i}' for i in range(1, USE_LAG+1)]
-    #ROLLING_FEATURES = [f"u_in_rolling_mean{w}" for w in ROLLING]
-    #ROLLING_FEATURES += [f"u_in_rolling_max{w}" for w in ROLLING]
-    #ROLLING_FEATURES += [f"u_in_rolling_min{w}" for w in ROLLING]
-    #ROLLING_FEATURES += [f"u_in_rolling_std{w}" for w in ROLLING]
+    ROLLING_FEATURES = [f"u_in_rolling_mean{w}" for w in ROLLING]
+    ROLLING_FEATURES += [f"u_in_rolling_max{w}" for w in ROLLING]
+    ROLLING_FEATURES += [f"u_in_rolling_min{w}" for w in ROLLING]
+    ROLLING_FEATURES += [f"u_in_rolling_std{w}" for w in ROLLING]
     ALL_FEATURES = CATE_FEATURES + CONT_FEATURES + LAG_FEATURES #+ ROLLING_FEATURES
     NORM_FEATURES = CONT_FEATURES + LAG_FEATURES #+ ROLLING_FEATURES
     
@@ -137,14 +137,24 @@ class VentilatorModel(nn.Module):
             nn.LayerNorm(config.EMBED_SIZE),
         )
         
-        self.lstm = nn.LSTM(config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True, num_layers=4)
+        #self.lstm = nn.LSTM(config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True, num_layers=4)
+        encoder_layers = nn.TransformerEncoderLayer(d_model=config.EMBED_SIZE, nhead=1, dim_feedforward=2048, dropout=0.0, batch_first=True)
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layers, num_layers=2)
+        self.head = nn.Sequential(
+            nn.Linear(config.EMBED_SIZE, config.EMBED_SIZE),
+            nn.LayerNorm(config.EMBED_SIZE),
+            nn.Tanh(),
+            nn.Linear(config.EMBED_SIZE, 950),
+        )
+        '''
         self.head = nn.Sequential(
             nn.Linear(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE * 2),
             nn.LayerNorm(config.HIDDEN_SIZE * 2),
             nn.ReLU(),
             nn.Linear(config.HIDDEN_SIZE * 2, 950),
         )
-        
+        '''
+
         # Encoder
         initrange = 0.1
         self.r_emb.weight.data.uniform_(-initrange, initrange)
@@ -173,7 +183,8 @@ class VentilatorModel(nn.Module):
         seq_x = torch.cat((r_emb, c_emb, rc_dot_emb, rc_sum_emb, X[:, :, 4:]), 2)
         emb_x = self.seq_emb(seq_x)
         
-        out, _ = self.lstm(emb_x, None) 
+        #out, _ = self.lstm(emb_x, None) 
+        out = self.transformer_encoder(emb_x)
         logits = self.head(out)
 
         if y is None:
@@ -184,12 +195,7 @@ class VentilatorModel(nn.Module):
         return logits, loss
     
     def loss_fn(self, y_pred, y_true):
-        ce_loss = nn.CrossEntropyLoss()(y_pred.reshape(-1, 950), y_true.reshape(-1))
-        ohe = F.one_hot(y_true, 950)
-        mask = (ohe == 0).int() * 0.2
-        bce_target = ohe + mask
-        bce_loss = nn.BCEWithLogitsLoss()(y_pred, bce_target)
-        loss = ce_loss + bce_loss * 0.5
+        loss = nn.CrossEntropyLoss()(y_pred.reshape(-1, 950), y_true.reshape(-1))
         return loss
 
 def train_loop(model, optimizer, scheduler, loader):
@@ -231,7 +237,7 @@ def test_loop(model, loader, target_dic_inv):
 
     return target_dic_inv[torch.vstack(predicts).reshape(-1)].numpy()
 
-def add_feature(df):
+'''def add_feature(df):
     df['time_delta'] = df.groupby('breath_id')['time_step'].diff().fillna(0)
     df['delta'] = df['time_delta'] * df['u_in']
     df['area'] = df.groupby('breath_id')['delta'].cumsum()
@@ -297,12 +303,21 @@ def norm_scale(train_df, test_df):
     scaler.fit(all_u_in)
     train_df[config.NORM_FEATURES] = scaler.transform(train_df[config.NORM_FEATURES].values)
     test_df[config.NORM_FEATURES] = scaler.transform(test_df[config.NORM_FEATURES].values)
-    return train_df, test_df
+    return train_df, test_df'''
 
 def main():
     
-    train_df = pd.read_csv(f"{config.INPUT}/train.csv")
-    test_df = pd.read_csv(f"{config.INPUT}/test.csv")
+    #train_df = pd.read_csv(f"{config.INPUT}/train.csv")
+    #test_df = pd.read_csv(f"{config.INPUT}/test.csv")
+    train_df = pd.read_feather(f"{config.OUTPUT}/features/train_v1_all_norm.ftr")
+    _df = pd.read_csv(f"{config.INPUT}/train.csv")[['pressure', 'breath_id', 'id']]
+    train_df['id'] = _df['id']
+    train_df['pressure'] = _df['pressure']
+    train_df['breath_id'] = _df['breath_id']
+    del _df
+    test_df = pd.read_feather(f"{config.OUTPUT}/features/test_v1_all_norm.ftr")
+    test_df['breath_id'] = pd.read_csv(f"{config.INPUT}/test.csv")['breath_id']
+    test_df['pressure'] = -1
     sub_df = pd.read_csv(f"{config.INPUT}/sample_submission.csv")
 
     oof = np.zeros(len(train_df))
@@ -315,19 +330,18 @@ def main():
     for fold, (_, valid_idx) in enumerate(gkf):
         train_df.loc[valid_idx, 'fold'] = fold
 
-    train_df = add_feature(train_df)
-    train_df = add_lag_feature(train_df)
-    train_df = add_category_features(train_df)
+    #train_df = add_feature(train_df)
+    #train_df = add_lag_feature(train_df)
+    #train_df = add_category_features(train_df)
     #train_df = add_rolling_features(train_df)
 
-    test_df = add_feature(test_df)
-    test_df = add_lag_feature(test_df)
-    test_df = add_category_features(test_df)
+    #test_df = add_feature(test_df)
+    #test_df = add_lag_feature(test_df)
+    #test_df = add_category_features(test_df)
     #test_df = add_rolling_features(test_df)
 
-    train_df, test_df = norm_scale(train_df, test_df)
+    #train_df, test_df = norm_scale(train_df, test_df)
 
-    test_df['pressure'] = -1
     test_dset = VentilatorDataset(test_df)
     test_loader = DataLoader(test_dset, batch_size=config.BS,
                              pin_memory=True, shuffle=False, drop_last=False, num_workers=os.cpu_count())
