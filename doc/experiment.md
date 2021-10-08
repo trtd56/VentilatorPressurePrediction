@@ -18,14 +18,15 @@
 |[exp072_rolling]|0.1729|0.187|fold-0のみ, 特徴量は別で計算したほうが良さそう|
 |[exp073_bce_smooth]||fold-0のみ,　あまり良くない|
 |exp074_layer5|0.1704|0.157||
-|[exp075_dropout0]||||
+|[exp075_dropout0]|||median_pp|
+|[exp075_dropout0]|||mean_pp|
 |[exp076_transformer]||||
-|[exp077_divide_rc]|0.2724||fold-0のみ|
-|[exp077_divide_r]|0.2034||fold-0のみ|
+|[exp077_divide_rc]|0.2724||fold-0のみ, 良くない|
+|[exp077_divide_r]|0.2034||fold-0のみ, 良くない|
 |exp078_transformer|||良くない|
 |exp079_smooth||||
-|exp079_smooth||||
-
+|[exp080_conti_rc]||||
+|exp081_smooth02||||
 
 ## ToDo
 - 特徴量増やしていく
@@ -33,7 +34,6 @@
 - u_outを0/1に(0/1を入れ替えたほうがいいかも)
 - backも使える？
 - norm消す（回帰？）
-- r,cを連続値に
 
 ## Share
 - LIMEで特徴量: https://www.kaggle.com/takamichitoda/ventilator-lime/edit
@@ -45,3 +45,4 @@
 [exp076_transformer]:https://github.com/trtd56/VentilatorPressurePrediction/blob/4fb4c6e244c749bbe5ee35da2bb6a01fef5b5815/src/ventilatorlstm.py
 [exp077_divide_rc]:https://www.kaggle.com/takamichitoda/ventilator-train-divide-r-c/notebook?scriptVersionId=76613957
 [exp077_divide_r]:https://www.kaggle.com/takamichitoda/ventilator-train-divide-r-c?scriptVersionId=76621692
+[exp080_conti_rc]:
