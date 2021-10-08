@@ -25,8 +25,9 @@
 |[exp077_divide_r]|0.2034||fold-0のみ, 良くない|
 |exp078_transformer|||良くない|
 |exp079_smooth|0.1694|||
-|[exp080_conti_rc]||||
+|[exp080_conti_rc]|0.1714|||
 |exp081_smooth02||||
+|exp082_smooth04||||
 
 ## ToDo
 - 特徴量増やしていく
@@ -34,6 +35,7 @@
 - u_outを0/1に(0/1を入れ替えたほうがいいかも)
 - backも使える？
 - norm消す（回帰？）
+- targetのラグを予測する(u_out=1 only)
 
 ## Share
 - LIMEで特徴量: https://www.kaggle.com/takamichitoda/ventilator-lime/edit
