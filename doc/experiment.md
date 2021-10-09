@@ -26,8 +26,10 @@
 |exp078_transformer|||良くない|
 |exp079_smooth|0.1694|||
 |[exp080_conti_rc]|0.1714|||
-|exp081_smooth02|0.1676|||
+|exp081_smooth02|0.1676|0.153|median_pp|
+|exp081_smooth02|0.1676|0.154|mean_pp|
 |exp082_smooth04||||
+|exp083_smooth2_4||||
 
 ## ToDo
 - 特徴量増やしていく
