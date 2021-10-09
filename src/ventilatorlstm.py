@@ -58,7 +58,7 @@ from sklearn.preprocessing import RobustScaler
 device = torch.device("cuda")
 
 class config:
-    EXP_NAME = "exp076_transformer"
+    EXP_NAME = "exp083_smooth2_4"
     
     INPUT = "/content/"
     OUTPUT = "/content/drive/MyDrive/Study/ventilator-pressure-prediction"
@@ -67,26 +67,22 @@ class config:
     
     LR = 5e-3
     N_EPOCHS = 50
-    EMBED_SIZE = 64
+    EMBED_SIZE =  64
     HIDDEN_SIZE = 256
     BS = 512
     WEIGHT_DECAY = 1e-3
 
-    USE_LAG = 4
-    ROLLING = [2, 4, 8]
-
     CATE_FEATURES = ['R_cate', 'C_cate', 'RC_dot', 'RC_sum']
     CONT_FEATURES = ['u_in', 'u_out', 'time_step'] + ['u_in_cumsum', 'u_in_cummean', 'area', 'cross', 'cross2']
+
+    USE_LAG = 4
     LAG_FEATURES = ['breath_time']
     LAG_FEATURES += [f'u_in_lag_{i}' for i in range(1, USE_LAG+1)]
     LAG_FEATURES += [f'u_in_time{i}' for i in range(1, USE_LAG+1)]
     LAG_FEATURES += [f'u_out_lag_{i}' for i in range(1, USE_LAG+1)]
-    ROLLING_FEATURES = [f"u_in_rolling_mean{w}" for w in ROLLING]
-    ROLLING_FEATURES += [f"u_in_rolling_max{w}" for w in ROLLING]
-    ROLLING_FEATURES += [f"u_in_rolling_min{w}" for w in ROLLING]
-    ROLLING_FEATURES += [f"u_in_rolling_std{w}" for w in ROLLING]
-    ALL_FEATURES = CATE_FEATURES + CONT_FEATURES + LAG_FEATURES #+ ROLLING_FEATURES
-    NORM_FEATURES = CONT_FEATURES + LAG_FEATURES #+ ROLLING_FEATURES
+
+    ALL_FEATURES = CATE_FEATURES + CONT_FEATURES + LAG_FEATURES
+    NORM_FEATURES = CONT_FEATURES + LAG_FEATURES
     
     NOT_WATCH_PARAM = ['INPUT']
 
@@ -137,23 +133,13 @@ class VentilatorModel(nn.Module):
             nn.LayerNorm(config.EMBED_SIZE),
         )
         
-        #self.lstm = nn.LSTM(config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True, num_layers=4)
-        encoder_layers = nn.TransformerEncoderLayer(d_model=config.EMBED_SIZE, nhead=1, dim_feedforward=2048, dropout=0.0, batch_first=True)
-        self.transformer_encoder = nn.TransformerEncoder(encoder_layers, num_layers=2)
-        self.head = nn.Sequential(
-            nn.Linear(config.EMBED_SIZE, config.EMBED_SIZE),
-            nn.LayerNorm(config.EMBED_SIZE),
-            nn.Tanh(),
-            nn.Linear(config.EMBED_SIZE, 950),
-        )
-        '''
+        self.lstm = nn.LSTM(config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True, num_layers=4)
         self.head = nn.Sequential(
             nn.Linear(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE * 2),
             nn.LayerNorm(config.HIDDEN_SIZE * 2),
             nn.ReLU(),
             nn.Linear(config.HIDDEN_SIZE * 2, 950),
         )
-        '''
 
         # Encoder
         initrange = 0.1
@@ -183,8 +169,7 @@ class VentilatorModel(nn.Module):
         seq_x = torch.cat((r_emb, c_emb, rc_dot_emb, rc_sum_emb, X[:, :, 4:]), 2)
         emb_x = self.seq_emb(seq_x)
         
-        #out, _ = self.lstm(emb_x, None) 
-        out = self.transformer_encoder(emb_x)
+        out, _ = self.lstm(emb_x, None) 
         logits = self.head(out)
 
         if y is None:
@@ -195,7 +180,21 @@ class VentilatorModel(nn.Module):
         return logits, loss
     
     def loss_fn(self, y_pred, y_true):
-        loss = nn.CrossEntropyLoss()(y_pred.reshape(-1, 950), y_true.reshape(-1))
+        ce_loss = nn.CrossEntropyLoss()(y_pred.reshape(-1, 950), y_true.reshape(-1))
+
+        # negative
+        neg_target_1 = F.relu(y_true.reshape(-1) - 1)
+        neg_loss_1 = nn.CrossEntropyLoss()(y_pred.reshape(-1, 950), neg_target_1.long())
+        neg_target_2 = F.relu(y_true.reshape(-1) - 2)
+        neg_loss_2 = nn.CrossEntropyLoss()(y_pred.reshape(-1, 950), neg_target_2.long())
+        # positive
+        pos_target_1 = 949 - F.relu((949 - (y_true.reshape(-1) + 1)))
+        pos_loss_1 = nn.CrossEntropyLoss()(y_pred.reshape(-1, 950), pos_target_1.long())
+        pos_target_2 = 949 - F.relu((949 - (y_true.reshape(-1) + 2)))
+        pos_loss_2 = nn.CrossEntropyLoss()(y_pred.reshape(-1, 950), pos_target_2.long())
+
+        # sum loss
+        loss = ce_loss + neg_loss_1 * 0.4 + neg_loss_2 * 0.2 + pos_loss_1 * 0.4 + pos_loss_2 * 0.2
         return loss
 
 def train_loop(model, optimizer, scheduler, loader):
@@ -237,84 +236,15 @@ def test_loop(model, loader, target_dic_inv):
 
     return target_dic_inv[torch.vstack(predicts).reshape(-1)].numpy()
 
-'''def add_feature(df):
-    df['time_delta'] = df.groupby('breath_id')['time_step'].diff().fillna(0)
-    df['delta'] = df['time_delta'] * df['u_in']
-    df['area'] = df.groupby('breath_id')['delta'].cumsum()
-
-    df['cross']= df['u_in']*df['u_out']
-    df['cross2']= df['time_step']*df['u_out']
-    
-    df['u_in_cumsum'] = (df['u_in']).groupby(df['breath_id']).cumsum()
-    df['one'] = 1
-    df['count'] = (df['one']).groupby(df['breath_id']).cumsum()
-    df['u_in_cummean'] =df['u_in_cumsum'] / df['count']
-    
-    df = df.drop(['count','one'], axis=1)
-    return df
-
-def add_lag_feature(df):
-    # https://www.kaggle.com/kensit/improvement-base-on-tensor-bidirect-lstm-0-173
-    for lag in range(1, config.USE_LAG+1):
-        df[f'breath_id_lag{lag}']=df['breath_id'].shift(lag).fillna(0)
-        df[f'breath_id_lag{lag}same']=np.select([df[f'breath_id_lag{lag}']==df['breath_id']], [1], 0)
-
-        # u_in 
-        df[f'u_in_lag_{lag}'] = df['u_in'].shift(lag).fillna(0) * df[f'breath_id_lag{lag}same']
-        df[f'u_in_time{lag}'] = df['u_in'] - df[f'u_in_lag_{lag}']
-        df[f'u_out_lag_{lag}'] = df['u_out'].shift(lag).fillna(0) * df[f'breath_id_lag{lag}same']
-
-    # breath_time
-    df['time_step_lag'] = df['time_step'].shift(1).fillna(0) * df[f'breath_id_lag{lag}same']
-    df['breath_time'] = df['time_step'] - df['time_step_lag']
-
-    drop_columns = ['time_step_lag']
-    drop_columns += [f'breath_id_lag{i}' for i in range(1, config.USE_LAG+1)]
-    drop_columns += [f'breath_id_lag{i}same' for i in range(1, config.USE_LAG+1)]
-    df = df.drop(drop_columns, axis=1)
-
-    # fill na by zero
-    df = df.fillna(0)
-    return df
-
-c_dic = {10: 0, 20: 1, 50:2}
-r_dic = {5: 0, 20: 1, 50:2}
-rc_sum_dic = {v: i for i, v in enumerate([15, 25, 30, 40, 55, 60, 70, 100])}
-rc_dot_dic = {v: i for i, v in enumerate([50, 100, 200, 250, 400, 500, 2500, 1000])}    
-
-def add_category_features(df):
-    df['C_cate'] = df['C'].map(c_dic)
-    df['R_cate'] = df['R'].map(r_dic)
-    df['RC_sum'] = (df['R'] + df['C']).map(rc_sum_dic)
-    df['RC_dot'] = (df['R'] * df['C']).map(rc_dot_dic)
-    return df
-
-def add_rolling_features(df):
-    for w in config.ROLLING:
-        df[f"u_in_rolling_mean{w}"] = df[["breath_id", "u_in"]].groupby("breath_id").rolling(w).mean()["u_in"].reset_index(drop=True)
-        df[f"u_in_rolling_max{w}"] = df[["breath_id", "u_in"]].groupby("breath_id").rolling(w).max()["u_in"].reset_index(drop=True)
-        df[f"u_in_rolling_min{w}"] = df[["breath_id", "u_in"]].groupby("breath_id").rolling(w).min()["u_in"].reset_index(drop=True)
-        df[f"u_in_rolling_std{w}"] = df[["breath_id", "u_in"]].groupby("breath_id").rolling(w).std()["u_in"].reset_index(drop=True)
-    return df
-
-def norm_scale(train_df, test_df):
-    scaler = RobustScaler()
-    all_u_in = np.vstack([train_df[config.NORM_FEATURES].values, test_df[config.NORM_FEATURES].values])
-    scaler.fit(all_u_in)
-    train_df[config.NORM_FEATURES] = scaler.transform(train_df[config.NORM_FEATURES].values)
-    test_df[config.NORM_FEATURES] = scaler.transform(test_df[config.NORM_FEATURES].values)
-    return train_df, test_df'''
-
 def main():
-    
-    #train_df = pd.read_csv(f"{config.INPUT}/train.csv")
-    #test_df = pd.read_csv(f"{config.INPUT}/test.csv")
+    # load train data
     train_df = pd.read_feather(f"{config.OUTPUT}/features/train_v1_all_norm.ftr")
     _df = pd.read_csv(f"{config.INPUT}/train.csv")[['pressure', 'breath_id', 'id']]
     train_df['id'] = _df['id']
     train_df['pressure'] = _df['pressure']
     train_df['breath_id'] = _df['breath_id']
     del _df
+    # load test data
     test_df = pd.read_feather(f"{config.OUTPUT}/features/test_v1_all_norm.ftr")
     test_df['breath_id'] = pd.read_csv(f"{config.INPUT}/test.csv")['breath_id']
     test_df['pressure'] = -1
@@ -329,18 +259,6 @@ def main():
     gkf = GroupKFold(n_splits=config.N_FOLD).split(train_df, train_df.pressure, groups=train_df.breath_id)
     for fold, (_, valid_idx) in enumerate(gkf):
         train_df.loc[valid_idx, 'fold'] = fold
-
-    #train_df = add_feature(train_df)
-    #train_df = add_lag_feature(train_df)
-    #train_df = add_category_features(train_df)
-    #train_df = add_rolling_features(train_df)
-
-    #test_df = add_feature(test_df)
-    #test_df = add_lag_feature(test_df)
-    #test_df = add_category_features(test_df)
-    #test_df = add_rolling_features(test_df)
-
-    #train_df, test_df = norm_scale(train_df, test_df)
 
     test_dset = VentilatorDataset(test_df)
     test_loader = DataLoader(test_dset, batch_size=config.BS,
