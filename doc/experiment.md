@@ -29,7 +29,7 @@
 |exp081_smooth02|0.1676|0.153|median_pp|
 |exp081_smooth02|0.1676|0.154|mean_pp|
 |exp082_smooth04|0.1674|0.154||
-|exp083_smooth2_4||||
+|[exp083_smooth2_4]||||
 
 ## ToDo
 - 特徴量増やしていく
@@ -51,3 +51,4 @@
 [exp077_divide_rc]:https://www.kaggle.com/takamichitoda/ventilator-train-divide-r-c/notebook?scriptVersionId=76613957
 [exp077_divide_r]:https://www.kaggle.com/takamichitoda/ventilator-train-divide-r-c?scriptVersionId=76621692
 [exp080_conti_rc]:https://www.kaggle.com/takamichitoda/ventilator-train-classification?scriptVersionId=76624771
+[exp083_smooth2_4]:https://github.com/trtd56/VentilatorPressurePrediction/blob/2e34d395975d6ad4ef91b77f4d443fd5f12e691a/src/ventilatorlstm.py
