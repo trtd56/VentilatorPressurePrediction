@@ -28,7 +28,7 @@
 |[exp080_conti_rc]|0.1714|||
 |exp081_smooth02|0.1676|0.153|median_pp|
 |exp081_smooth02|0.1676|0.154|mean_pp|
-|exp082_smooth04||||
+|exp082_smooth04|0.1674|0.154||
 |exp083_smooth2_4||||
 
 ## ToDo
@@ -37,7 +37,7 @@
 - u_outを0/1に(0/1を入れ替えたほうがいいかも)
 - backも使える？
 - norm消す（回帰？）
-- targetのラグを予測する(u_out=1 only)
+- targetのラグを予測する(u_out=1 only)→回帰用？
 - CNNきくかも
 
 ## Share
