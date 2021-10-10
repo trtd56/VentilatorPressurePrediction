@@ -30,6 +30,8 @@
 |exp081_smooth02|0.1676|0.154|mean_pp|
 |exp082_smooth04|0.1674|0.154||
 |[exp083_smooth2_4]||||
+|exp084_mcnn||||
+
 
 ## ToDo
 - 特徴量増やしていく
