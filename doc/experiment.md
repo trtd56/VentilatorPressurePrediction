@@ -63,4 +63,4 @@
 [exp080_conti_rc]:https://www.kaggle.com/takamichitoda/ventilator-train-classification?scriptVersionId=76624771
 [exp083_smooth2_4]:https://github.com/trtd56/VentilatorPressurePrediction/blob/2e34d395975d6ad4ef91b77f4d443fd5f12e691a/src/ventilatorlstm.py
 [exp084_mcnn]:https://www.kaggle.com/takamichitoda/ventilator-train-mcnn/edit
-[exp086_reg_diff]:https://www.kaggle.com/takamichitoda/ventilator-train-regression-diff/edit
+[exp086_reg_diff]:https://www.kaggle.com/takamichitoda/fork-of-ventilator-train-classification?scriptVersionId=76820332
