@@ -34,17 +34,19 @@
 |[exp084_mcnn]||||
 |exp085_smooth1_2_4|0.1647|0.152|mean_pp|
 |exp085_smooth1_2_4|0.1647|0.151|median_pp|
-
+|exp085_smooth1_2_4|0.1647|0.151|median_pp|
+|[exp086_reg_diff]|0.1986|0.241|diffなしfold-0|
+|[exp086_reg_diff]||||
+|exp086_mask|0.1653|0.150||
+|exp087_smooth_lag4||||
 
 ## ToDo
 - 特徴量増やしていく
   - 平均との差など(u_outに依存する部分があるので効かなそう)
 - u_outを0/1に(0/1を入れ替えたほうがいいかも)
 - backも使える？
-- mask loss
 - norm消す（回帰？）
 - targetのラグを予測する(u_out=1 only)→回帰用？
-- CNNきくかも
 
 ## Share
 - LIMEで特徴量: https://www.kaggle.com/takamichitoda/ventilator-lime/edit
@@ -59,4 +61,4 @@
 [exp080_conti_rc]:https://www.kaggle.com/takamichitoda/ventilator-train-classification?scriptVersionId=76624771
 [exp083_smooth2_4]:https://github.com/trtd56/VentilatorPressurePrediction/blob/2e34d395975d6ad4ef91b77f4d443fd5f12e691a/src/ventilatorlstm.py
 [exp084_mcnn]:https://www.kaggle.com/takamichitoda/ventilator-train-mcnn/edit
-
+[exp086_reg_diff]:
