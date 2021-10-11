@@ -40,7 +40,7 @@
 |[exp086_reg_diff]|||diff2|
 |[exp086_reg_diff]|0.1838||diff3|
 |exp086_mask|0.1653|0.150||
-|exp087_smooth_lag4||||
+|exp087_smooth_lag4|0.1648|0.150||
 
 ## ToDo
 - 特徴量増やしていく
