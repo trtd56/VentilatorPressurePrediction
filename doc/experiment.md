@@ -29,8 +29,11 @@
 |exp081_smooth02|0.1676|0.153|median_pp|
 |exp081_smooth02|0.1676|0.154|mean_pp|
 |exp082_smooth04|0.1674|0.154||
-|[exp083_smooth2_4]||||
+|[exp083_smooth2_4]|0.1653|0.153|mean_pp|
+|[exp083_smooth2_4]|0.1653|0.152|median_pp|
 |exp084_mcnn||||
+|exp085_smooth1_2_4|0.1647|0.152|mean_pp|
+|exp085_smooth1_2_4|0.1647|0.151|median_pp|
 
 
 ## ToDo
