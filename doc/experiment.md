@@ -31,7 +31,7 @@
 |exp082_smooth04|0.1674|0.154||
 |[exp083_smooth2_4]|0.1653|0.153|mean_pp|
 |[exp083_smooth2_4]|0.1653|0.152|median_pp|
-|exp084_mcnn||||
+|[exp084_mcnn]||||
 |exp085_smooth1_2_4|0.1647|0.152|mean_pp|
 |exp085_smooth1_2_4|0.1647|0.151|median_pp|
 
@@ -58,3 +58,5 @@
 [exp077_divide_r]:https://www.kaggle.com/takamichitoda/ventilator-train-divide-r-c?scriptVersionId=76621692
 [exp080_conti_rc]:https://www.kaggle.com/takamichitoda/ventilator-train-classification?scriptVersionId=76624771
 [exp083_smooth2_4]:https://github.com/trtd56/VentilatorPressurePrediction/blob/2e34d395975d6ad4ef91b77f4d443fd5f12e691a/src/ventilatorlstm.py
+[exp084_mcnn]:https://www.kaggle.com/takamichitoda/ventilator-train-mcnn/edit
+
