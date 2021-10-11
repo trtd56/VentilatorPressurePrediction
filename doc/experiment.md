@@ -36,9 +36,9 @@
 |exp085_smooth1_2_4|0.1647|0.151|median_pp|
 |exp085_smooth1_2_4|0.1647|0.151|median_pp|
 |[exp086_reg_diff]|0.1986|0.241|diffなしfold-0|
-|[exp086_reg_diff]|0.188|0.223|diffあり|
-|[exp086_reg_diff]|||diff2|
-|[exp086_reg_diff]|0.1838||diff3|
+|[exp086_reg_diff]|0.188|0.223|diffありfold-0|
+|[exp086_reg_diff]|0.1838||diff2fold-0|
+|[exp086_reg_diff]|0.1808||diff3|
 |exp086_mask|0.1653|0.150||
 |exp087_smooth_lag4|0.1648|0.150||
 |exp088_h1024|0.1647|0.175|fold-0のみ, fold-1は悪かった＆時間かかりすぎ|
@@ -66,4 +66,4 @@
 [exp080_conti_rc]:https://www.kaggle.com/takamichitoda/ventilator-train-classification?scriptVersionId=76624771
 [exp083_smooth2_4]:https://github.com/trtd56/VentilatorPressurePrediction/blob/2e34d395975d6ad4ef91b77f4d443fd5f12e691a/src/ventilatorlstm.py
 [exp084_mcnn]:https://www.kaggle.com/takamichitoda/ventilator-train-mcnn/edit
-[exp086_reg_diff]:https://www.kaggle.com/takamichitoda/fork-of-ventilator-train-classification?scriptVersionId=76820332
+[exp086_reg_diff]:https://www.kaggle.com/takamichitoda/ventilator-train-classification-regdiff
