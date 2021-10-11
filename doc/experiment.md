@@ -35,8 +35,9 @@
 |exp085_smooth1_2_4|0.1647|0.152|mean_pp|
 |exp085_smooth1_2_4|0.1647|0.151|median_pp|
 |exp085_smooth1_2_4|0.1647|0.151|median_pp|
-|exp086_reg_diff|0.1986|0.241|diffなしfold-0|
-|[exp086_reg_diff]|||diffあり|
+|[exp086_reg_diff]|0.1986|0.241|diffなしfold-0|
+|[exp086_reg_diff]|0.188|0.223|diffあり|
+|[exp086_reg_diff]|||diff2|
 |exp086_mask|0.1653|0.150||
 |exp087_smooth_lag4||||
 
