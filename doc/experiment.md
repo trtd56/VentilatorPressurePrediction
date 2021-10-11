@@ -48,7 +48,8 @@
 - backも使える？
 - norm消す（回帰？）
 - targetのラグを予測する(u_out=1 only)→回帰用？
-
+- StratifiedGroup(CRで)
+- 
 ## Share
 - LIMEで特徴量: https://www.kaggle.com/takamichitoda/ventilator-lime/edit
 
