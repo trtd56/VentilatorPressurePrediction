@@ -43,17 +43,12 @@
 |exp087_smooth_lag4|0.1648|0.150||
 |exp088_h1024|0.1647|0.175|fold-0のみ, fold-1は悪かった＆時間かかりすぎ|
 |exp089_dropout_train|0.1693|0.182|fold-0のみ|
-|exp089_skgfold|0.1683|0.181|fold-0のみ|
+|exp090_skgfold|0.1683|0.181|fold-0のみ|
+|exp091_lstm_head|||全然だめ|
+|exp091_mask01||||
 
 ## ToDo
-- 特徴量増やしていく
-  - 平均との差など(u_outに依存する部分があるので効かなそう)
-- u_outを0/1に(0/1を入れ替えたほうがいいかも)
-- backも使える？
-- norm消す（回帰？）
-
-## Share
-- LIMEで特徴量: https://www.kaggle.com/takamichitoda/ventilator-lime/edit
+- 特徴量増やす
 
 [exp068_categorical]:https://www.kaggle.com/takamichitoda/ventilator-train-classification/notebook?scriptVersionId=76446772
 [exp072_rolling]:https://github.com/trtd56/VentilatorPressurePrediction/blob/03a0f142a306d867fc6cb730c2804ba642e22806/src/ventilatorlstm.py
