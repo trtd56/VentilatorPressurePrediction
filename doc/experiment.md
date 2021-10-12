@@ -47,7 +47,10 @@
 |exp091_lstm_head|||全然だめ|
 |exp091_mask01|||微妙なので打ち切り|
 |exp092_roll_re|||miss|
-|[exp093_add_back]||||
+|[exp093_add_back]|0.1677||fold-0のみ|
+|exp094_cont_v2||||
+
+
 
 ## ToDo
 - rolling
