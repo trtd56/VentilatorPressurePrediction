@@ -46,7 +46,7 @@
 |exp090_skgfold|0.1683|0.181|fold-0のみ|
 |exp091_lstm_head|||全然だめ|
 |exp091_mask01|||微妙なので打ち切り|
-|exp092_roll_re||||
+|exp092_roll_re|||miss|
 |[exp093_add_back]||||
 
 ## ToDo
@@ -64,3 +64,4 @@
 [exp083_smooth2_4]:https://github.com/trtd56/VentilatorPressurePrediction/blob/2e34d395975d6ad4ef91b77f4d443fd5f12e691a/src/ventilatorlstm.py
 [exp084_mcnn]:https://www.kaggle.com/takamichitoda/ventilator-train-mcnn/edit
 [exp086_reg_diff]:https://www.kaggle.com/takamichitoda/ventilator-train-classification-regdiff
+[exp093_add_back]:https://github.com/trtd56/VentilatorPressurePrediction/blob/be743745127b72164607b091994d922cf405859a/src/ventilatorlstm.py
