@@ -69,7 +69,7 @@
 |exp113_skip||||
 |exp114_mask01||||
 |exp115_no_norm||||
-
+|exp116_cnn||||
 
 ## ToDo
 - CNN
