@@ -47,9 +47,11 @@
 |exp091_lstm_head|||全然だめ|
 |exp091_mask01|||微妙なので打ち切り|
 |exp092_roll_re||||
+|[exp093_add_back]||||
 
 ## ToDo
-- 特徴量増やす
+- rolling
+- mask01
 
 [exp068_categorical]:https://www.kaggle.com/takamichitoda/ventilator-train-classification/notebook?scriptVersionId=76446772
 [exp072_rolling]:https://github.com/trtd56/VentilatorPressurePrediction/blob/03a0f142a306d867fc6cb730c2804ba642e22806/src/ventilatorlstm.py
