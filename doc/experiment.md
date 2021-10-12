@@ -66,8 +66,9 @@
 |exp108_bs1024||||
 |exp109_unit1024||||
 |exp110_mlp2|0.1673|||
-|exp111_diff3|||dropout onにしちゃってた|
-
+|exp111_diff3|0.1643||fold-0のみ|
+|[exp112_mask]||||
+exp112_mask
 ## ToDo
 - CNN
 - pseudo labeling
@@ -84,3 +85,4 @@
 [exp084_mcnn]:https://www.kaggle.com/takamichitoda/ventilator-train-mcnn/edit
 [exp086_reg_diff]:https://www.kaggle.com/takamichitoda/ventilator-train-classification-regdiff
 [exp093_add_back]:https://github.com/trtd56/VentilatorPressurePrediction/blob/be743745127b72164607b091994d922cf405859a/src/ventilatorlstm.py
+[exp112_mask]:
