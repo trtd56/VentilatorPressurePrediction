@@ -45,16 +45,15 @@
 |exp089_dropout_train|0.1693|0.182|fold-0のみ|
 |exp090_skgfold|0.1683|0.181|fold-0のみ|
 |exp091_lstm_head|||全然だめ|
-|exp091_mask01|||微妙なので打ち切り|
-|exp092_roll_re|||miss|
+|exp091_mask01||||
+|exp092_roll_re||||
 |[exp093_add_back]|0.1677||fold-0のみ|
-|exp094_cont_v2||||
-
+|exp094_cont_v2|0.1694||fold-0のみ|
+|exp095_ewm|0.1669||fold-0のみ|
+ 
 
 
 ## ToDo
-- rolling
-- mask01
 - pseudo labeling
 - pre-train→fine-tuning
 
