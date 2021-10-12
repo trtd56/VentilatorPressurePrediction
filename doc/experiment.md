@@ -45,7 +45,8 @@
 |exp089_dropout_train|0.1693|0.182|fold-0のみ|
 |exp090_skgfold|0.1683|0.181|fold-0のみ|
 |exp091_lstm_head|||全然だめ|
-|exp091_mask01||||
+|exp091_mask01|||微妙なので打ち切り|
+|exp092_roll_re||||
 
 ## ToDo
 - 特徴量増やす
