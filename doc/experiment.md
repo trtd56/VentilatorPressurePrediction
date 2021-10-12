@@ -50,8 +50,8 @@
 |[exp093_add_back]|0.1677||fold-0のみ|
 |exp094_cont_v2|0.1694||fold-0のみ|
 |exp095_ewm|0.1669||fold-0のみ|
-|exp096_reload_reg|0.1669||fold-0のみ|
-
+|exp096_reload_reg|||fold-0のみ|
+|exp097_unfreeze10||||
  
 
 
