@@ -66,7 +66,7 @@
 |exp108_bs1024||||
 |exp109_unit1024||||
 |exp110_mlp2||||
-|exp111_diff3|||exp101_diffと同じはず|
+|exp111_diff3|||dropout onにしちゃってた|
 
 ## ToDo
 - CNN
