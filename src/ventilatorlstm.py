@@ -26,7 +26,7 @@ drive.mount('/content/drive')
 
 !rm *zip
 
-!pip install -U torch wandb transformers #scikit-learn
+!pip install -U torch wandb transformers
 
 with open("./drive/MyDrive/Study/config/wandb.txt", "r") as f:
     for line in f:
@@ -44,7 +44,6 @@ import numpy as np
 import pandas as pd
 
 from sklearn.model_selection import GroupKFold
-#from sklearn.model_selection import StratifiedGroupKFold
 from tqdm.notebook import tqdm
 
 import torch
@@ -59,7 +58,8 @@ from sklearn.preprocessing import RobustScaler
 device = torch.device("cuda")
 
 class config:
-    EXP_NAME = "exp093_add_back"
+    EXP_NAME = "exp112_mask"
+    CLS_MODEL = "exp087_smooth_lag4"
     
     INPUT = "/content/"
     OUTPUT = "/content/drive/MyDrive/Study/ventilator-pressure-prediction"
@@ -82,26 +82,8 @@ class config:
     LAG_FEATURES += [f'u_in_time{i}' for i in range(1, USE_LAG+1)]
     LAG_FEATURES += [f'u_out_lag_{i}' for i in range(1, USE_LAG+1)]
 
-    LAG_BACK_FEATURES = [f'u_in_lag_{i}_back' for i in range(1, USE_LAG+1)]
-    LAG_BACK_FEATURES += [f'u_in_time{i}_back' for i in range(1, USE_LAG+1)]
-    LAG_BACK_FEATURES += [f'u_out_lag_{i}_back' for i in range(1, USE_LAG+1)]
-
-    CONT_FEATURES_V2 = ['u_in_mean', 'u_in_std', 'breath_id_u_out_mean', 'last_value_u_in', 'first_value_u_in']
-
-    EWM_LST = [8, 16, 32]
-    EWM_FEATURES = [f'ewm_u_in_mean_{i}' for i in EWM_LST]
-    EWM_FEATURES += [f'ewm_u_in_std_{i}' for i in EWM_LST]
-    EWM_FEATURES += [f'ewm_u_in_corr_{i}' for i in EWM_LST]
-
-    ROLLING = [2, 4, 8]
-    ROLLING_FEATURES = [f"u_in_rolling_mean{w}" for w in ROLLING]
-    ROLLING_FEATURES += [f"u_in_rolling_max{w}" for w in ROLLING]
-    ROLLING_FEATURES += [f"u_in_rolling_min{w}" for w in ROLLING]
-    ROLLING_FEATURES += [f"u_in_rolling_std{w}" for w in ROLLING]
-
-
-    ALL_FEATURES = CATE_FEATURES + CONT_FEATURES + LAG_FEATURES + LAG_BACK_FEATURES #+ CONT_FEATURES_V2 + EWM_FEATURES + ROLLING_FEATURES
-    NORM_FEATURES = CONT_FEATURES + LAG_FEATURES + LAG_BACK_FEATURES #+ CONT_FEATURES_V2 + EWM_FEATURES + ROLLING_FEATURES
+    ALL_FEATURES = CATE_FEATURES + CONT_FEATURES + LAG_FEATURES
+    NORM_FEATURES = CONT_FEATURES + LAG_FEATURES
     
     NOT_WATCH_PARAM = ['INPUT']
 
@@ -128,14 +110,16 @@ class VentilatorDataset(Dataset):
         df = self.dfs[item]
         X = df[config.ALL_FEATURES].values
         y = df['pressure'].values
+        '''
         if self.label_dic is None:
             label = [-1]
         else:
             label = [self.label_dic[i] for i in y]
-
+        '''
         d = {
             "X": torch.tensor(X).float(),
-            "y" : torch.tensor(label).long(),
+            #"y" : torch.tensor(label).long(),
+            "y": torch.tensor(y).float(),
         }
         return d
 
@@ -188,7 +172,11 @@ class VentilatorModel(nn.Module):
         seq_x = torch.cat((r_emb, c_emb, rc_dot_emb, rc_sum_emb, X[:, :, 4:]), 2)
         emb_x = self.seq_emb(seq_x)
         
-        out, _ = self.lstm(emb_x, None) 
+        out, _ = self.lstm(emb_x, None)
+        #out = torch.cat((out, emb_x), 2)
+
+        return out
+        '''
         logits = self.head(out)
 
         if y is None:
@@ -198,6 +186,7 @@ class VentilatorModel(nn.Module):
             loss = self.loss_fn(logits, y, mask)
             
         return logits, loss
+        '''
     
     def loss_fn(self, y_pred, y_true, mask):
         criterion = nn.CrossEntropyLoss()
@@ -213,8 +202,51 @@ class VentilatorModel(nn.Module):
             loss_u_out_0 += criterion(y_pred[mask].reshape(-1, 950), (949 - F.relu((949 - (y_true[mask].reshape(-1) + lag)))).long()) * w
             loss_u_out_1 += criterion(y_pred[mask==0].reshape(-1, 950), (949 - F.relu((949 - (y_true[mask==0].reshape(-1) + lag)))).long()) * w
 
-        loss = loss_u_out_0 + loss_u_out_1 * 0.5
+        loss = loss_u_out_0 + loss_u_out_1 * 0.1
         return loss
+
+
+class VentilatorModelRegr(nn.Module):
+    
+    def __init__(self, load_path):
+        super(VentilatorModelRegr, self).__init__()
+        self.cls_model = VentilatorModel()
+        self.cls_model.load_state_dict(torch.load(load_path))
+
+        encoder_layers = nn.TransformerEncoderLayer(d_model=config.HIDDEN_SIZE * 2, nhead=1, dim_feedforward=2048, dropout=0.0, batch_first=True)
+        self.head = nn.Sequential(
+            nn.TransformerEncoder(encoder_layers, num_layers=1),
+            #nn.Linear(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE * 2),
+            nn.LayerNorm(config.HIDDEN_SIZE * 2),
+            nn.ReLU(),
+            nn.Linear(config.HIDDEN_SIZE * 2, 1),
+        )
+
+    def forward(self, X, y=None):
+        
+
+        out = self.cls_model(X)
+        regr = self.head(out)
+
+        if y is None:
+            loss = None
+        else:
+            mask = X[:, :, 5] == -1
+            loss = self.loss_fn(regr.squeeze(2), y, mask)
+            
+        return regr, loss
+    
+    def loss_fn(self, y_pred, y_true, mask):
+        criterion = nn.SmoothL1Loss(reduction='none')
+        l1_loss = criterion(y_pred, y_true)
+        loss = l1_loss[mask].mean() + l1_loss[mask==0].mean() * 0.5
+        #for diff in range(1, 4):
+        #    loss += criterion(y_pred[:, diff:] - y_pred[:, :-diff], y_true[:, diff:] - y_true[:, :-diff])
+        return loss
+
+    def freeze_cls(self):
+        for param in self.cls_model.parameters():
+            param.requires_grad = False
 
 def train_loop(model, optimizer, scheduler, loader):
     losses, lrs = [], []
@@ -241,9 +273,10 @@ def valid_loop(model, loader, target_dic_inv):
         with torch.no_grad():
             out, loss = model(d['X'].to(device), d['y'].to(device))
         losses.append(loss.item())
-        predicts.append(out.argmax(2).cpu())
-
-    return np.array(losses).mean(), target_dic_inv[torch.vstack(predicts).reshape(-1)].numpy()
+        #predicts.append(out.argmax(2).cpu())
+        predicts.append(out.cpu())
+    #return np.array(losses).mean(), target_dic_inv[torch.vstack(predicts).reshape(-1)].numpy()    
+    return np.array(losses).mean(), torch.vstack(predicts).squeeze(2).numpy().reshape(-1)
 
 def test_loop(model, loader, target_dic_inv):
     predicts = []
@@ -251,29 +284,25 @@ def test_loop(model, loader, target_dic_inv):
     for d in loader:
         with torch.no_grad():
             out, _ = model(d['X'].to(device))
-        predicts.append(out.argmax(2).cpu())
-
-    return target_dic_inv[torch.vstack(predicts).reshape(-1)].numpy()
+        #predicts.append(out.argmax(2).cpu())
+        predicts.append(out.cpu())
+    #return target_dic_inv[torch.vstack(predicts).reshape(-1)].numpy()
+    return torch.vstack(predicts).squeeze(2).numpy().reshape(-1)
 
 def main():
     # load train data
-    train_df = pd.concat([
-                          pd.read_feather(f"{config.OUTPUT}/features/train_v1_all_norm.ftr"),
-                          pd.read_feather(f"{config.OUTPUT}/features/train_v2_all_norm.ftr"),
-    ], axis=1)
+    train_df = pd.read_feather(f"{config.OUTPUT}/features/train_v1_all_norm.ftr")
     _df = pd.read_csv(f"{config.INPUT}/train.csv")
     train_df['id'] = _df['id']
     train_df['pressure'] = _df['pressure']
     train_df['breath_id'] = _df['breath_id']
-    #r_c = _df.apply(lambda x: f"{x.R}_{x.C}", axis=1).values
+    train_df = train_df.fillna(0)
     del _df
     # load test data
-    test_df = pd.concat([
-                          pd.read_feather(f"{config.OUTPUT}/features/test_v1_all_norm.ftr"),
-                          pd.read_feather(f"{config.OUTPUT}/features/test_v2_all_norm.ftr"),
-    ], axis=1)
+    test_df = pd.read_feather(f"{config.OUTPUT}/features/test_v1_all_norm.ftr")
     test_df['breath_id'] = pd.read_csv(f"{config.INPUT}/test.csv")['breath_id']
     test_df['pressure'] = -1
+    test_df = test_df.fillna(0)
     sub_df = pd.read_csv(f"{config.INPUT}/sample_submission.csv")
 
     oof = np.zeros(len(train_df))
@@ -283,7 +312,6 @@ def main():
     target_dic_inv = torch.tensor(list(target_dic.keys()))
 
     gkf = GroupKFold(n_splits=config.N_FOLD).split(train_df, train_df.pressure, groups=train_df.breath_id)
-    #sgkf = StratifiedGroupKFold(n_splits=config.N_FOLD, random_state=config.SEED, shuffle=True).split(train_df, r_c, groups=train_df.breath_id)
     for fold, (_, valid_idx) in enumerate(gkf):
         train_df.loc[valid_idx, 'fold'] = fold
 
@@ -303,8 +331,10 @@ def main():
         valid_loader = DataLoader(valid_dset, batch_size=config.BS,
                                   pin_memory=True, shuffle=False, drop_last=False, num_workers=os.cpu_count())
 
-        model = VentilatorModel()
+        load_path = f"{config.OUTPUT}/{config.CLS_MODEL}/ventilator_f{fold}_best_model.bin"
+        model = VentilatorModelRegr(load_path)
         model.to(device)
+        model.freeze_cls()
 
         optimizer = AdamW(model.parameters(), lr=config.LR, weight_decay=config.WEIGHT_DECAY)
         num_train_steps = int(len(train_loader) * config.N_EPOCHS)
@@ -407,6 +437,4 @@ if __name__ == "__main__":
     main()
 
 wandb.finish()
-
-
 
