@@ -29,19 +29,27 @@
 |exp081_smooth02|0.1676|0.153|median_pp|
 |exp081_smooth02|0.1676|0.154|mean_pp|
 |exp082_smooth04|0.1674|0.154||
-|exp083_smooth2_4||||
+|[exp083_smooth2_4]|0.1653|0.153|mean_pp|
+|[exp083_smooth2_4]|0.1653|0.152|median_pp|
+|[exp084_mcnn]||||
+|exp085_smooth1_2_4|0.1647|0.152|mean_pp|
+|exp085_smooth1_2_4|0.1647|0.151|median_pp|
+|exp085_smooth1_2_4|0.1647|0.151|median_pp|
+|[exp086_reg_diff]|0.1986|0.241|diffなしfold-0|
+|[exp086_reg_diff]|0.188|0.223|diffありfold-0|
+|[exp086_reg_diff]|0.1838||diff2fold-0|
+|[exp086_reg_diff]|0.1808|0.188|diff3|
+|exp086_mask|0.1653|0.150||
+|exp087_smooth_lag4|0.1648|0.150||
+|exp088_h1024|0.1647|0.175|fold-0のみ, fold-1は悪かった＆時間かかりすぎ|
+|exp089_dropout_train|0.1693|0.182|fold-0のみ|
+|exp090_skgfold|0.1683|0.181|fold-0のみ|
+|exp091_lstm_head|||全然だめ|
+|exp091_mask01|||微妙なので打ち切り|
+|exp092_roll_re||||
 
 ## ToDo
-- 特徴量増やしていく
-  - 平均との差など(u_outに依存する部分があるので効かなそう)
-- u_outを0/1に(0/1を入れ替えたほうがいいかも)
-- backも使える？
-- norm消す（回帰？）
-- targetのラグを予測する(u_out=1 only)→回帰用？
-- CNNきくかも
-
-## Share
-- LIMEで特徴量: https://www.kaggle.com/takamichitoda/ventilator-lime/edit
+- 特徴量増やす
 
 [exp068_categorical]:https://www.kaggle.com/takamichitoda/ventilator-train-classification/notebook?scriptVersionId=76446772
 [exp072_rolling]:https://github.com/trtd56/VentilatorPressurePrediction/blob/03a0f142a306d867fc6cb730c2804ba642e22806/src/ventilatorlstm.py
@@ -51,3 +59,6 @@
 [exp077_divide_rc]:https://www.kaggle.com/takamichitoda/ventilator-train-divide-r-c/notebook?scriptVersionId=76613957
 [exp077_divide_r]:https://www.kaggle.com/takamichitoda/ventilator-train-divide-r-c?scriptVersionId=76621692
 [exp080_conti_rc]:https://www.kaggle.com/takamichitoda/ventilator-train-classification?scriptVersionId=76624771
+[exp083_smooth2_4]:https://github.com/trtd56/VentilatorPressurePrediction/blob/2e34d395975d6ad4ef91b77f4d443fd5f12e691a/src/ventilatorlstm.py
+[exp084_mcnn]:https://www.kaggle.com/takamichitoda/ventilator-train-mcnn/edit
+[exp086_reg_diff]:https://www.kaggle.com/takamichitoda/ventilator-train-classification-regdiff
