@@ -60,6 +60,8 @@
  - パラメータ増やす
  - clsのheadもつかう
  - skip connect
+ - diff
+ - mask
 - pseudo labeling
 
 [exp068_categorical]:https://www.kaggle.com/takamichitoda/ventilator-train-classification/notebook?scriptVersionId=76446772
