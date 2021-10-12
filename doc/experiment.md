@@ -52,7 +52,10 @@
 |exp095_ewm|0.1669||fold-0のみ|
 |exp096_reload_reg|||fold-0のみ|
 |exp097_unfreeze10||||
- 
+|exp098_transformer|0.1627|0.151|mean_pp|
+|exp098_transformer|0.1627|0.150|median_pp|
+|exp099_head2||||
+|exp100_layer2||||
 
 
 ## ToDo
