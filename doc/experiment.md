@@ -65,7 +65,7 @@
 |exp107_train_dropout||||
 |exp108_bs1024||||
 |exp109_unit1024||||
-|exp110_mlp2||||
+|exp110_mlp2|0.1673|||
 |exp111_diff3|||dropout onにしちゃってた|
 
 ## ToDo
