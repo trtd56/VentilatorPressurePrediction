@@ -1,7 +1,5 @@
 # 実験管理
 
-推論MSD
-
 |code|OOF|LB|memo|
 |--|--|--|--|
 |exp045_now_best||0.195|post processing & median|
@@ -70,6 +68,8 @@
 |[exp112_mask]||||
 |exp113_skip||||
 |exp114_mask01||||
+|exp115_no_norm||||
+
 
 ## ToDo
 - CNN
