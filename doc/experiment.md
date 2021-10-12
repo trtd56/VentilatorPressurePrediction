@@ -62,10 +62,13 @@
 |exp104_use_cls|||暴発|
 |exp105_diff8|||ちょい微妙？|
 |exp106_diff4||||
+|exp107_train_dropout||||
+|exp108_bs1024||||
+|exp109_unit1024||||
+|exp110_mlp2||||
+|exp111_diff3|||exp101_diffと同じはず|
 
 ## ToDo
-- dropout_train
-- unit減らす
 - CNN
 - pseudo labeling
 
