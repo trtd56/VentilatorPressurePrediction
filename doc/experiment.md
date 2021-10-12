@@ -69,6 +69,7 @@
 |exp111_diff3|0.1643||fold-0のみ|
 |[exp112_mask]||||
 |exp113_skip||||
+|exp114_mask01||||
 
 ## ToDo
 - CNN
