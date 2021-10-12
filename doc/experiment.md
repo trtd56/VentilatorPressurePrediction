@@ -46,10 +46,12 @@
 |exp090_skgfold|0.1683|0.181|fold-0のみ|
 |exp091_lstm_head|||全然だめ|
 |exp091_mask01||||
-|exp092_roll_re||||
+|exp092_roll_re|||良くないので打ち切り|
 |[exp093_add_back]|0.1677||fold-0のみ|
 |exp094_cont_v2|0.1694||fold-0のみ|
 |exp095_ewm|0.1669||fold-0のみ|
+|exp096_reload_reg|0.1669||fold-0のみ|
+
  
 
 
