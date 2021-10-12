@@ -54,17 +54,19 @@
 |exp097_unfreeze10||||
 |exp098_transformer|0.1627|0.151|mean_pp|
 |exp098_transformer|0.1627|0.150|median_pp|
-|exp099_head2||||
-|exp100_layer2||||
-
+|exp099_head2|||暴発|
+|exp100_layer2|||暴発|
+|exp101_diff|||良さげ|
+|exp102_mask|||diff onlyの方が良さそう|
+|exp103_skip|||diff onlyの方が良さそう|
+|exp104_use_cls|||暴発|
+|exp105_diff8|||ちょい微妙？|
+|exp106_diff4||||
 
 ## ToDo
-- transformer
- - パラメータ増やす
- - clsのheadもつかう
- - skip connect
- - diff
- - mask
+- dropout_train
+- unit減らす
+- CNN
 - pseudo labeling
 
 [exp068_categorical]:https://www.kaggle.com/takamichitoda/ventilator-train-classification/notebook?scriptVersionId=76446772
