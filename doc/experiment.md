@@ -38,11 +38,12 @@
 |[exp086_reg_diff]|0.1986|0.241|diffなしfold-0|
 |[exp086_reg_diff]|0.188|0.223|diffありfold-0|
 |[exp086_reg_diff]|0.1838||diff2fold-0|
-|[exp086_reg_diff]|0.1808||diff3|
+|[exp086_reg_diff]|0.1808|0.188|diff3|
 |exp086_mask|0.1653|0.150||
 |exp087_smooth_lag4|0.1648|0.150||
 |exp088_h1024|0.1647|0.175|fold-0のみ, fold-1は悪かった＆時間かかりすぎ|
-
+|exp089_dropout_train|0.1693|0.182|fold-0のみ|
+|exp089_skgfold|0.1683|0.181|fold-0のみ|
 
 ## ToDo
 - 特徴量増やしていく
@@ -50,9 +51,7 @@
 - u_outを0/1に(0/1を入れ替えたほうがいいかも)
 - backも使える？
 - norm消す（回帰？）
-- targetのラグを予測する(u_out=1 only)→回帰用？
-- StratifiedGroup(CRで)
-- 
+
 ## Share
 - LIMEで特徴量: https://www.kaggle.com/takamichitoda/ventilator-lime/edit
 
