@@ -12,6 +12,7 @@
 - mcnn(1, 3, 5)
 - layerごとのlearning rateでfreezeしない
 - Stacking
+- RとCを分ける
 - ordinal regressionやらcustom lossのShare
 - LIME
 
