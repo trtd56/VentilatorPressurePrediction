@@ -58,7 +58,7 @@ from sklearn.preprocessing import RobustScaler
 device = torch.device("cuda")
 
 class config:
-    EXP_NAME = "exp117_cnn_2"
+    EXP_NAME = "exp120_mcnn"
     CLS_MODEL = "exp087_smooth_lag4"
     
     INPUT = "/content/"
@@ -137,23 +137,6 @@ class VentilatorModel(nn.Module):
             nn.Linear(config.HIDDEN_SIZE * 2, 950),
         )
 
-        # Encoder
-        initrange = 0.1
-        self.r_emb.weight.data.uniform_(-initrange, initrange)
-        self.c_emb.weight.data.uniform_(-initrange, initrange)
-        self.rc_dot_emb.weight.data.uniform_(-initrange, initrange)
-        self.rc_sum_emb.weight.data.uniform_(-initrange, initrange)
-        
-        # LSTM
-        for n, m in self.named_modules():
-            if isinstance(m, nn.LSTM):
-                print(f'init {m}')
-                for param in m.parameters():
-                    if len(param.shape) >= 2:
-                        nn.init.orthogonal_(param.data)
-                    else:
-                        nn.init.normal_(param.data)
-
     def forward(self, X):
         # embed
         bs = X.shape[0]
@@ -167,6 +150,7 @@ class VentilatorModel(nn.Module):
         
         out, _ = self.lstm(emb_x, None)
         out = torch.cat((out, emb_x), 2)
+        #out = self.head(out)
 
         return out
 
@@ -178,31 +162,67 @@ class VentilatorModelRegr(nn.Module):
         self.cls_model = VentilatorModel()
         self.cls_model.load_state_dict(torch.load(load_path))
 
-        self.cnn_3_1 = nn.Conv1d(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, kernel_size=3, padding=1)
-        self.cnn_3_2 = nn.Conv1d(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, kernel_size=3, padding=1)
+        
+        #self.cnn_3_1 = nn.Conv1d(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, kernel_size=3, padding=1)
+        #self.cnn_3_2 = nn.Conv1d(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, kernel_size=3, padding=1)
         #self.cnn_3_3 = nn.Conv1d(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, kernel_size=3, padding=1)
         #self.cnn_3_4 = nn.Conv1d(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, kernel_size=3, padding=1)
 
-        #encoder_layers = nn.TransformerEncoderLayer(d_model=config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, nhead=1, dim_feedforward=2048, dropout=0.0, batch_first=True)
+        self.cnn_1_1 = nn.Conv1d(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, kernel_size=1, padding=0)
+        self.cnn_1_2 = nn.Conv1d(config.HIDDEN_SIZE, config.HIDDEN_SIZE, kernel_size=1, padding=0)
+        self.cnn_1_3 = nn.Conv1d(config.HIDDEN_SIZE, config.HIDDEN_SIZE, kernel_size=1, padding=0)
+        self.cnn_1_4 = nn.Conv1d(config.HIDDEN_SIZE, config.HIDDEN_SIZE, kernel_size=1, padding=0)
+        self.cnn_3_1 = nn.Conv1d(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, kernel_size=3, padding=1)
+        self.cnn_3_2 = nn.Conv1d(config.HIDDEN_SIZE, config.HIDDEN_SIZE, kernel_size=3, padding=1)
+        self.cnn_3_3 = nn.Conv1d(config.HIDDEN_SIZE, config.HIDDEN_SIZE, kernel_size=3, padding=1)
+        self.cnn_3_4 = nn.Conv1d(config.HIDDEN_SIZE, config.HIDDEN_SIZE, kernel_size=3, padding=1)
+        self.cnn_5_1 = nn.Conv1d(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE, kernel_size=5, padding=2)
+        self.cnn_5_2 = nn.Conv1d(config.HIDDEN_SIZE, config.HIDDEN_SIZE, kernel_size=5, padding=2)
+        self.cnn_5_3 = nn.Conv1d(config.HIDDEN_SIZE, config.HIDDEN_SIZE, kernel_size=5, padding=2)
+        self.cnn_5_4 = nn.Conv1d(config.HIDDEN_SIZE, config.HIDDEN_SIZE, kernel_size=5, padding=2)
+
+        
         self.head = nn.Sequential(
-            nn.Linear(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE * 2 + config.EMBED_SIZE),
-            #nn.TransformerEncoder(encoder_layers, num_layers=1),
-            nn.LayerNorm(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE),
+            nn.Linear(config.HIDDEN_SIZE * 3, config.HIDDEN_SIZE * 3),
+            nn.LayerNorm(config.HIDDEN_SIZE * 3),
             nn.ReLU(),
-            nn.Linear(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, 1),
+            nn.Linear(config.HIDDEN_SIZE * 3, 1),
         )
+        
+        self.regression = nn.Linear(950, 1)
 
     def forward(self, X, y=None):
         out = self.cls_model(X)
 
         out = out.permute(0, 2, 1)
-        out = F.relu(self.cnn_3_1(out))
-        out = F.relu(self.cnn_3_2(out))
+
+        #out = F.relu(self.cnn_3_1(out))
+        #out = F.relu(self.cnn_3_2(out))
         #out = F.relu(self.cnn_3_3(out))
         #out = F.relu(self.cnn_3_4(out))
+
+        h1 = F.relu(self.cnn_1_1(out))
+        h1 = F.relu(self.cnn_1_2(h1))
+        h1 = F.relu(self.cnn_1_3(h1))
+        h1 = F.relu(self.cnn_1_4(h1))
+
+        h3 = F.relu(self.cnn_3_1(out))
+        h3 = F.relu(self.cnn_3_2(h3))
+        h3 = F.relu(self.cnn_3_3(h3))
+        h3 = F.relu(self.cnn_3_4(h3))
+        
+        h5 = F.relu(self.cnn_5_1(out))
+        h5 = F.relu(self.cnn_5_2(h5))
+        h5 = F.relu(self.cnn_5_3(h5))
+        h5 = F.relu(self.cnn_5_4(h5))
+
+        out = torch.cat((h1, h3, h5), 1)
+
         out = out.permute(0, 2, 1)
 
         regr = self.head(out)
+        #regr = self.regression(out)
+
 
         if y is None:
             loss = None
@@ -221,6 +241,21 @@ class VentilatorModelRegr(nn.Module):
     def freeze_cls(self):
         for param in self.cls_model.parameters():
             param.requires_grad = False
+
+def get_optimizer_grouped_parameters(model):
+    optimizer_grouped_parameters = [
+        {
+            "params": [p for n, p in model.named_parameters() if 'cls_model' in n],
+            "weight_decay": config.WEIGHT_DECAY,
+            "lr": 1e-5,
+        },
+        {
+            "params": [p for n, p in model.named_parameters() if 'cls_model' not in n],
+            "weight_decay": config.WEIGHT_DECAY,
+            "lr": 5e-3,
+        },
+    ]
+    return optimizer_grouped_parameters
 
 def train_loop(model, optimizer, scheduler, loader):
     losses, lrs = [], []
@@ -307,6 +342,8 @@ def main():
         model.freeze_cls()
 
         optimizer = AdamW(model.parameters(), lr=config.LR, weight_decay=config.WEIGHT_DECAY)
+        #optimizer = AdamW(get_optimizer_grouped_parameters(model), lr=config.LR, weight_decay=config.WEIGHT_DECAY)
+
         num_train_steps = int(len(train_loader) * config.N_EPOCHS)
         num_warmup_steps = int(num_train_steps / 10)
         scheduler = get_cosine_schedule_with_warmup(optimizer, num_warmup_steps=num_warmup_steps, num_training_steps=num_train_steps)
@@ -407,4 +444,7 @@ if __name__ == "__main__":
     main()
 
 wandb.finish()
+
+# Commented out IPython magic to ensure Python compatibility.
+# %debug
 
