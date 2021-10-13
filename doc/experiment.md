@@ -7,7 +7,7 @@
 |[exp117_cnn_2]||||
 |exp118_lstm|||あんまよくない|
 |exp119_layer_lr_diff|||暴発|
-|[exp120_mcnn]|||fold-0のみ|
+|[exp120_mcnn]|0.1627||fold-0のみ|
 |exp121_cnn135||||
 
 ## ToDo
