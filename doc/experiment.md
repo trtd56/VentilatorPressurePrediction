@@ -13,14 +13,16 @@
 |exp123_3rd||||
 |exp124_inc_epoch||||
 |exp125_dec_epoch||||
+|exp125_dec_epoch||||
+|exp126_pseudo||||
 |||||
 |stacking_01|0.1556|0.146|['exp086_mask', 'exp087_smooth_lag4', 'exp098_transformer', 'exp116_cnn']|
 |stacking_01|0.1556|0.148|mean_pp|
 |stacking_02|0.1561|0.147|no mask|
+|stacking_03|0.1560|0.147|RC分ける|
 
 ## ToDo
-- pseudo labeling
-- RとCを分ける
+
 - ordinal regressionやらcustom lossのShare
 - LIME
 
