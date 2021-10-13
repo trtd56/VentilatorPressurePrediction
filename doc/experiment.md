@@ -10,12 +10,13 @@
 |[exp120_mcnn]|0.1627||fold-0のみ|
 |exp121_cnn135||||
 |[exp122_skip]||||
+|exp123_3rd||||
+|exp124_inc_epoch||||
 
 ## ToDo
 - pseudo labeling
 - Stacking
 - RとCを分ける
-- 3rd stage
 - ordinal regressionやらcustom lossのShare
 - LIME
 
