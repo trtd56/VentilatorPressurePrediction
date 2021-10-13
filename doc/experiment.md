@@ -3,7 +3,7 @@
 |code|OOF|LB|memo|
 |--|--|--|--|
 |exp098_transformer|0.1627|0.150|median_pp|
-|exp116_cnn|0.1622|||
+|exp116_cnn|0.1622|0.150||
 |[exp117_cnn_2]||||
 
 ## ToDo
