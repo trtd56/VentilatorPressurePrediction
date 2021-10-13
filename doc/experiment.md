@@ -11,5 +11,8 @@
 - lstm
 - mcnn(1, 3, 5)
 - layerごとのlearning rateでfreezeしない
+- ordinal regressionやらcustom lossのShare
+- LIME
 
 [exp117_cnn_2]:https://github.com/trtd56/VentilatorPressurePrediction/blob/a3453b6ab14528efa19cf7e7e77558348333a384/src/ventilatorlstm_2nd.py
+
