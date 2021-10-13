@@ -13,6 +13,8 @@
 - pseudo labeling
 - Stacking
 - RとCを分ける
+- mcnn_skip
+- 3rd stage
 - ordinal regressionやらcustom lossのShare
 - LIME
 
