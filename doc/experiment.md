@@ -25,7 +25,9 @@
 |stacking_03|0.1560|0.147|RC分ける|
 |stacking_04|0.1555|0.146|["exp086_mask", "exp098_transformer", "exp116_cnn"]|
 |[stacking_05]|0.1562||["exp086_mask", "exp098_transformer", "exp116_cnn", "exp126_pseudo"]|
-|[stacking_06]|0.1482|0.144|ここまで全部|
+|stacking_06|0.1482|0.144|ここまで全部|
+|[stacking_07]|0.1478|0.145|pseudoもいれちゃう|
+
 
 
 ## ToDo
@@ -37,3 +39,4 @@
 [exp122_skip]:https://github.com/trtd56/VentilatorPressurePrediction/blob/85af1fdcdd7ffa7ec91f1abad88dbe7c582220c5/src/ventilatorlstm_2nd.py
 [exp129_fintune_reg]:https://www.kaggle.com/takamichitoda/ventilator-fine-tune-regression?scriptVersionId=77059448
 [stacking_05]:https://github.com/trtd56/VentilatorPressurePrediction/blob/0b819b0968eaa91dace97a1b95407f99e3159e15/src/ventilatorlstm_stacking.py
+[stacking_07]:https://github.com/trtd56/VentilatorPressurePrediction/blob/5c8f2317926928c3c21971ef02b97e0f27d31358/src/ventilatorlstm_stacking.py
