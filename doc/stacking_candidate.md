@@ -9,7 +9,7 @@
 |exp074_layer5|0.1704|0.157||Y|
 |[exp075_dropout0]|0.1708|0.155|median_pp||
 |exp079_smooth|0.1694|||Y|
-|[exp080_conti_rc]|0.1714||||
+|[exp080_conti_rc]|0.1714|||(Y)|
 |exp081_smooth02|0.1676|0.153|median_pp|Y|
 |exp082_smooth04|0.1674|0.154||Y|
 |[exp083_smooth2_4]|0.1653|0.152|median_pp|Y|
