@@ -19,6 +19,9 @@
 |[exp129_fintune_reg]|0.1765|0.165||
 |exp130_target_norm||||
 |[exp131_tanh]||||
+|[exp132_diff]|0.1619|||
+|||||
+|[exp133_all_features]||||
 |||||
 |stacking_01|0.1556|0.146|['exp086_mask', 'exp087_smooth_lag4', 'exp098_transformer', 'exp116_cnn']|
 |stacking_01|0.1556|0.148|mean_pp|
@@ -33,7 +36,6 @@
 
 ## ToDo
 - LIME
-- いろんな特徴をいれてStacking
 
 [exp117_cnn_2]:https://github.com/trtd56/VentilatorPressurePrediction/blob/a3453b6ab14528efa19cf7e7e77558348333a384/src/ventilatorlstm_2nd.py
 [exp120_mcnn]:https://github.com/trtd56/VentilatorPressurePrediction/blob/e21fcc9d85eb3c07e84b14cfa1a15d8c14792176/src/ventilatorlstm_2nd.py
@@ -41,5 +43,6 @@
 [exp129_fintune_reg]:https://www.kaggle.com/takamichitoda/ventilator-fine-tune-regression?scriptVersionId=77059448
 [exp128_u_out_0]:https://github.com/trtd56/VentilatorPressurePrediction/blob/0ee49c9b6bfad980427280d620456ca29a22199d/src/ventilatorlstm_2nd.py
 [exp131_tanh]:https://github.com/trtd56/VentilatorPressurePrediction/blob/5f42a550ccca23f274e8c4754d49a55a07a3247d/src/ventilatorlstm_2nd.py
+[exp132_diff]:https://github.com/trtd56/VentilatorPressurePrediction/blob/211c29bbefcf6f68b0b54c4b0d7b26b52e103341/src/ventilatorlstm_2nd.py
 [stacking_05]:https://github.com/trtd56/VentilatorPressurePrediction/blob/0b819b0968eaa91dace97a1b95407f99e3159e15/src/ventilatorlstm_stacking.py
 [stacking_07]:https://github.com/trtd56/VentilatorPressurePrediction/blob/5c8f2317926928c3c21971ef02b97e0f27d31358/src/ventilatorlstm_stacking.py
