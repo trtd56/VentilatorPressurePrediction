@@ -18,6 +18,7 @@
 |[exp128_u_out_0]|||あまり改善せず|
 |[exp129_fintune_reg]|0.1765|0.165||
 |exp130_target_norm||||
+|exp131_tanh||||
 |||||
 |stacking_01|0.1556|0.146|['exp086_mask', 'exp087_smooth_lag4', 'exp098_transformer', 'exp116_cnn']|
 |stacking_01|0.1556|0.148|mean_pp|
