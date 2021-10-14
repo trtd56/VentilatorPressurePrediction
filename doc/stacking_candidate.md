@@ -1,6 +1,8 @@
 
 |code|OOF|LB|memo|
 |--|--|--|--|
+|[exp022_cos]|0.212|0.244||
+|[exp023_1dcnn]|0.387|0.559||
 |exp045_now_best||0.195|post processing & median|
 |[exp068_categorical]|0.1745|0.165|mean_pp|
 |exp071_no_dropout|0.170|0.153|median_pp|
@@ -22,7 +24,8 @@
 |exp127_inc_epoch|0.1566|0.149||
 |[exp129_fintune_reg]|0.1765|0.165||
 
-
+[exp022_cos]:https://github.com/trtd56/VentilatorPressurePrediction/blob/565e0de4231d86b7af88a349e3ec03c1abc379c4/src/ventilatorlstm.py
+[exp023_1dcnn]:https://www.kaggle.com/takamichitoda/ventilator-1dcnn-lstm?scriptVersionId=76092602
 [exp068_categorical]:https://www.kaggle.com/takamichitoda/ventilator-train-classification/notebook?scriptVersionId=76446772
 [exp075_dropout0]:https://www.kaggle.com/takamichitoda/ventilator-train-classification?scriptVersionId=76597714
 [exp080_conti_rc]:https://www.kaggle.com/takamichitoda/ventilator-train-classification?scriptVersionId=76624771
