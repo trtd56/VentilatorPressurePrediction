@@ -21,8 +21,8 @@
 |exp110_mlp2|0.1673||||
 |exp116_cnn|0.1622|0.150||Y|
 |exp125_dec_epoch|0.1669||||
-|exp126_pseudo|0.1598||||
-|exp127_inc_epoch|0.1566|0.149|||
+|exp126_pseudo|0.1598|||N|
+|exp127_inc_epoch|0.1566|0.149||N|
 |[exp129_fintune_reg]|0.1765|0.165|||
 
 
