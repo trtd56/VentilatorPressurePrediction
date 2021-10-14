@@ -41,10 +41,18 @@ import pandas as pd
 from sklearn.model_selection import GroupKFold
 from sklearn.linear_model import BayesianRidge
 
+from sklearn.preprocessing import RobustScaler
+
+!ls /content/drive/MyDrive/Study/ventilator-pressure-prediction
+
 class config:
-    #STACKING_MODELS = ["exp086_mask", "exp087_smooth_lag4", "exp098_transformer", "exp116_cnn"]
-    #STACKING_MODELS = ["exp086_mask", "exp098_transformer", "exp116_cnn"]
-    STACKING_MODELS = ["exp086_mask", "exp098_transformer", "exp116_cnn", "exp126_pseudo"]
+    STACKING_MODELS = [
+                       'exp071_no_dropout', 'exp074_layer5', 'exp079_smooth', 'exp081_smooth02', 'exp082_smooth04',
+                       'exp083_smooth2_4', 'exp085_smooth1_2_4', 'exp087_smooth_lag4',
+                       "exp086_mask", "exp098_transformer", "exp116_cnn",
+                       # pseudo
+                       'exp126_pseudo', 'exp127_inc_epoch',
+    ]
     INPUT = "/content/"
     OUTPUT = "/content/drive/MyDrive/Study/ventilator-pressure-prediction"
     N_FOLD = 5
@@ -60,14 +68,6 @@ def set_seed(seed=config.SEED):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
-dfs = {}
-for fname in config.STACKING_MODELS:
-    _df = pd.read_csv(f"{config.OUTPUT}/{fname}/oof.csv")
-    dfs[fname] = _df['oof'].tolist()
-dfs['id'] = _df['id'].tolist()
-
-oof_df = pd.DataFrame(dfs)
-
 train_df = pd.read_csv(f"{config.INPUT}/train.csv")
 test_df = pd.read_csv(f"{config.INPUT}/test.csv")
 sub_df = pd.read_csv(f"{config.INPUT}/sample_submission.csv")
@@ -75,6 +75,14 @@ sub_df = pd.read_csv(f"{config.INPUT}/sample_submission.csv")
 gkf = GroupKFold(n_splits=config.N_FOLD).split(train_df, train_df.pressure, groups=train_df.breath_id)
 for fold, (_, valid_idx) in enumerate(gkf):
     train_df.loc[valid_idx, 'fold'] = fold
+
+dfs = {}
+for fname in config.STACKING_MODELS:
+    _df = pd.read_csv(f"{config.OUTPUT}/{fname}/oof.csv")
+    dfs[fname] = _df['oof'].tolist()
+dfs['id'] = _df['id'].tolist()
+
+oof_df = pd.DataFrame(dfs)
 
 train_df = pd.merge(train_df, oof_df, on='id')
 
@@ -93,23 +101,34 @@ def find_nearest(prediction):
     upper_val = sorted_pressures[insert_idx]
     return lower_val if abs(lower_val - prediction) < abs(upper_val - prediction) else upper_val
 
+cols = config.STACKING_MODELS
+
+#X_transformer = RobustScaler().fit(train_df[cols].values)
+#y_transformer = RobustScaler().fit(train_df['pressure'].values.reshape(-1, 1))
+
 models = []
 stack_oof = np.zeros(len(train_df))
 for fold in range(config.N_FOLD):
-    X_train = train_df.query(f"fold!={fold}")[config.STACKING_MODELS].values
+    X_train = train_df.query(f"fold!={fold}")[cols].values
     y_train = train_df.query(f"fold!={fold}")['pressure'].values
     mask_train = train_df.query(f"fold!={fold}")['u_out'].values == 0
 
-    X_valid = train_df.query(f"fold=={fold}")[config.STACKING_MODELS].values
+    X_valid = train_df.query(f"fold=={fold}")[cols].values
     y_valid = train_df.query(f"fold=={fold}")['pressure'].values
     mask_valid = train_df.query(f"fold=={fold}")['u_out'].values == 0
 
+    #X_train = X_transformer.transform(X_train)
+    #X_valid = X_transformer.transform(X_valid)
+    #y_train_norm = y_transformer.transform(y_train.reshape(-1, 1)).reshape(-1)
+
     clf = BayesianRidge(n_iter=300, verbose=True)
-    #clf.fit(X_train, y_train)
     clf.fit(X_train[mask_train], y_train[mask_train])
+    #clf.fit(X_train[mask_train], y_train_norm[mask_train])
     models.append(clf)
 
     y_pred_valid = clf.predict(X_valid)
+    #y_pred_valid = y_transformer.inverse_transform(y_pred_valid.reshape(-1, 1)).reshape(-1)
+
     stack_oof[train_df.query(f"fold=={fold}").index.values] = y_pred_valid
     score = np.abs(y_pred_valid - y_valid).mean()
     score_mask = np.abs(y_pred_valid[mask_valid] - y_valid[mask_valid]).mean()
@@ -117,7 +136,12 @@ for fold in range(config.N_FOLD):
     print(f'fold-{fold}: score={score}, mask_score{score_mask}')
 
 oof_score = np.abs(stack_oof - train_df['pressure'].values).mean()
-print(oof_score)
+oof_score_mask = np.abs(stack_oof[train_df['u_out'].values == 0] - train_df['pressure'].values[train_df['u_out'].values == 0]).mean()
+print(oof_score, oof_score_mask)
+
+for fold in range(config.N_FOLD):
+    print(fold, models[fold].intercept_)
+    display(pd.DataFrame([models[fold].coef_], columns=cols))
 
 test_predicts = []
 for fold in range(config.N_FOLD):
@@ -132,80 +156,9 @@ for fold in range(config.N_FOLD):
     y_pred_test = clf.predict(X_test)
     test_predicts.append(y_pred_test)
 
-test_predicts_mean = np.stack(test_predicts).mean(0)
 test_predicts_median = np.median(np.stack(test_predicts), 0)
 
-for fold in range(config.N_FOLD):
-    print(fold, models[fold].intercept_)
-    display(pd.DataFrame([models[fold].coef_], columns=config.STACKING_MODELS))
-
-#sub_df['pressure'] = test_predicts_mean
-#sub_df.to_csv(f"./submission_stacking_mean.csv", index=None)
-#sub_df["pressure"] = sub_df["pressure"].apply(find_nearest)
-#sub_df.to_csv(f"./submission_stacking_mean_pp.csv", index=None)
-
 sub_df['pressure'] = test_predicts_median
-#sub_df.to_csv(f"./submission_stacking_median.csv", index=None)
 sub_df["pressure"] = sub_df["pressure"].apply(find_nearest)
 sub_df.to_csv(f"./submission_stacking_median_pp.csv", index=None)
-
-cols = ['exp086_mask', 'exp087_smooth_lag4', 'exp098_transformer', 'exp116_cnn']
-
-models = []
-stack_oof = np.zeros(len(train_df))
-for fold in range(config.N_FOLD):
-    model_dic = {}
-    for (r, c), df in train_df.groupby(['R', 'C']):
-        X_train = df.query(f"fold!={fold}")[cols].values
-        y_train = df.query(f"fold!={fold}")['pressure'].values
-        mask_train = df.query(f"fold!={fold}")['u_out'].values == 0
-
-        X_valid = df.query(f"fold=={fold}")[cols].values
-        y_valid = df.query(f"fold=={fold}")['pressure'].values
-        mask_valid = df.query(f"fold=={fold}")['u_out'].values == 0
-
-        clf = BayesianRidge(n_iter=300, verbose=True)
-        clf.fit(X_train[mask_train], y_train[mask_train])
-        model_dic[f'{r}_{c}'] = clf
-
-        stack_oof[df.query(f"fold=={fold}").index.values] = clf.predict(X_valid)
-    models.append(model_dic)
-
-oof_score = np.abs(stack_oof - train_df['pressure'].values).mean()
-print(oof_score)
-
-pred_dfs = []
-for (r, c), df in test_df.groupby(['R', 'C']):
-    print(r, c)
-    test_predicts = []
-    for fold in range(config.N_FOLD):
-        print(fold)
-        clf = models[fold][f'{r}_{c}']
-        X_test = []
-        for fname in config.STACKING_MODELS:
-            _df = pd.read_csv(f"{config.OUTPUT}/{fname}/sub_f{fold}.csv")
-            X_test.append(_df.loc[df.index, 'pressure'].values)
-        X_test = np.stack(X_test).T
-        y_pred_test = clf.predict(X_test)
-        test_predicts.append(y_pred_test)
-    df.loc[df.index, 'pressure'] = np.median(np.stack(test_predicts), 0)
-    pred_dfs.append(df)
-
-pred_rc_div = pd.concat(pred_dfs).sort_values("id").reset_index(drop=True)['pressure']
-
-sub_df['pressure'] = pred_rc_div
-sub_df["pressure"] = sub_df["pressure"].apply(find_nearest)
-sub_df.to_csv(f"./submission_stacking_median_pp.csv", index=None)
-
-#!rm -rf submission_stacking_*
-
-pred_dfs[0]
-
-from matplotlib import pyplot as plt
-
-plt.scatter(test_predicts_median, pred_rc_div)
-
-
-
-test_df
 
