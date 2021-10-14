@@ -14,7 +14,7 @@
 |exp124_inc_epoch||||
 |exp125_dec_epoch|0.1669|||
 |exp126_pseudo|0.1598|||
-|exp127_inc_epoch||||
+|exp127_inc_epoch|0.1566|||
 |exp128_u_out_0||||
 |[exp129_fintune_reg]||||
 |exp130_target_norm||||
@@ -25,6 +25,8 @@
 |stacking_03|0.1560|0.147|RC分ける|
 |stacking_04|0.1555|0.146|["exp086_mask", "exp098_transformer", "exp116_cnn"]|
 |[stacking_05]|0.1562||["exp086_mask", "exp098_transformer", "exp116_cnn", "exp126_pseudo"]|
+
+
 
 
 ## ToDo
