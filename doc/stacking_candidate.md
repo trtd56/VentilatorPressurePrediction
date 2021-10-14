@@ -23,7 +23,7 @@
 |exp125_dec_epoch|0.1669|||N|
 |exp126_pseudo|0.1598|||N|
 |exp127_inc_epoch|0.1566|0.149||N|
-|[exp129_fintune_reg]|0.1765|0.165|||
+|[exp129_fintune_reg]|0.1765|0.165||(Y)|
 
 
 
