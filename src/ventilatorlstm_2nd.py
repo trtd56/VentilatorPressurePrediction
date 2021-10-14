@@ -58,16 +58,15 @@ from sklearn.preprocessing import RobustScaler
 device = torch.device("cuda")
 
 class config:
-    EXP_NAME = "exp128_u_out_0"
+    EXP_NAME = "exp131_tanh"
     CLS_MODEL = "exp087_smooth_lag4"
-    #CLS_MODEL = "exp116_cnn"
 
     INPUT = "/content/"
     OUTPUT = "/content/drive/MyDrive/Study/ventilator-pressure-prediction"
     N_FOLD = 5
     SEED = 0
     
-    LR = 5e-3
+    LR = 1e-4
     N_EPOCHS = 50
     EMBED_SIZE =  64
     HIDDEN_SIZE = 256
@@ -110,11 +109,11 @@ class VentilatorDataset(Dataset):
         df = self.dfs[item]
         X = df[config.ALL_FEATURES].values
         y = df['pressure'].values
-        pseudo = df['pseudo'].values
+        norm_y = df['norm_pressure'].values
         d = {
             "X": torch.tensor(X).float(),
             "y": torch.tensor(y).float(),
-            "pseudo": torch.tensor(pseudo).long(),
+            "norm_y": torch.tensor(norm_y).float(),
         }
         return d
 
@@ -171,7 +170,8 @@ class VentilatorModelRegr(nn.Module):
         self.head = nn.Sequential(
             nn.Linear(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE * 2 + config.EMBED_SIZE),
             nn.LayerNorm(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE),
-            nn.ReLU(),
+            #nn.ReLU(),
+            nn.Tanh(),
             nn.Linear(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, 1),
         )
 
@@ -189,25 +189,16 @@ class VentilatorModelRegr(nn.Module):
 
         if y is None:
             loss = None
-        elif pseudo is None:
-            mask = X[:, :, 5] == -1
-            loss = self.loss_fn(regr.squeeze(2), y, mask)
         else:
             mask = X[:, :, 5] == -1
-            loss = self.pseudo_loss_fn(regr.squeeze(2), y, mask, pseudo)
-            
+            loss = self.loss_fn(regr.squeeze(2), y, mask)
+
         return regr, loss
     
     def loss_fn(self, y_pred, y_true, mask):
         criterion = nn.SmoothL1Loss(reduction='none')
         l1_loss = criterion(y_pred, y_true)
         loss = l1_loss[mask].mean() + l1_loss[mask==0].mean() * 0.5
-        return loss
-
-    def pseudo_loss_fn(self, y_pred, y_true, mask, pseudo):
-        criterion = nn.SmoothL1Loss(reduction='none')
-        l1_loss = criterion(y_pred, y_true)
-        loss = l1_loss[mask].mean() + (l1_loss[mask==0] * (pseudo[mask==0] == 0)).mean() * 0.5
         return loss
 
     def freeze_cls(self):
@@ -219,7 +210,8 @@ def train_loop(model, optimizer, scheduler, loader):
     model.train()
     optimizer.zero_grad()
     for d in loader:
-        out, loss = model(d['X'].to(device), d['y'].to(device), d['pseudo'].to(device))
+        #out, loss = model(d['X'].to(device), d['y'].to(device))
+        out, loss = model(d['X'].to(device), d['norm_y'].to(device))
         
         losses.append(loss.item())
         step_lr = np.array([param_group["lr"] for param_group in optimizer.param_groups]).mean()
@@ -237,7 +229,8 @@ def valid_loop(model, loader, target_dic_inv):
     model.eval()
     for d in loader:
         with torch.no_grad():
-            out, loss = model(d['X'].to(device), d['y'].to(device))
+            #out, loss = model(d['X'].to(device), d['y'].to(device))
+            out, loss = model(d['X'].to(device), d['norm_y'].to(device))
         losses.append(loss.item())
         predicts.append(out.cpu())
     return np.array(losses).mean(), torch.vstack(predicts).squeeze(2).numpy().reshape(-1)
@@ -251,21 +244,6 @@ def test_loop(model, loader, target_dic_inv):
         predicts.append(out.cpu())
     return torch.vstack(predicts).squeeze(2).numpy().reshape(-1)
 
-def get_optimizer_grouped_parameters(model):
-    optimizer_grouped_parameters = [
-        {
-            "params": [p for n, p in model.named_parameters() if 'cls_model' in n],
-            "weight_decay": config.WEIGHT_DECAY,
-            "lr": 1e-5,
-        },
-        {
-            "params": [p for n, p in model.named_parameters() if 'cls_model' not in n],
-            "weight_decay": config.WEIGHT_DECAY,
-            "lr": 1e-4,
-        },
-    ]
-    return optimizer_grouped_parameters
-
 def main():
     # load train data
     train_df = pd.read_feather(f"{config.OUTPUT}/features/train_v1_all_norm.ftr")
@@ -274,19 +252,19 @@ def main():
     train_df['pressure'] = _df['pressure']
     train_df['breath_id'] = _df['breath_id']
     train_df = train_df.fillna(0)
-    train_df['pseudo'] = 0
     del _df
 
     # load test data
     test_df = pd.read_feather(f"{config.OUTPUT}/features/test_v1_all_norm.ftr")
     test_df['breath_id'] = pd.read_csv(f"{config.INPUT}/test.csv")['breath_id']
-    #test_df['pressure'] = -1
-    _df = pd.read_csv(f"{config.OUTPUT}/result/stacking_01.csv")
-    test_df['pressure'] = _df['pressure']
-    test_df['pseudo'] = 1
-
+    test_df['pressure'] = -1
+    test_df['norm_pressure'] = -1
     test_df = test_df.fillna(0)
     sub_df = pd.read_csv(f"{config.INPUT}/sample_submission.csv")
+
+    # norm
+    y_transformer = RobustScaler().fit(train_df['pressure'].values.reshape(-1, 1))
+    train_df['norm_pressure'] = y_transformer.transform(train_df['pressure'].values.reshape(-1, 1)).reshape(-1)
 
     oof = np.zeros(len(train_df))
     test_preds_lst = []
@@ -305,8 +283,7 @@ def main():
     for fold in range(config.N_FOLD):
         print(f'Fold-{fold}')
     
-        #train_dset = VentilatorDataset(train_df.query(f"fold!={fold}"), target_dic)
-        train_dset = VentilatorDataset(pd.concat([train_df.query(f"fold!={fold}"), test_df], axis=0).reset_index(drop=True))
+        train_dset = VentilatorDataset(train_df.query(f"fold!={fold}"))
         valid_dset = VentilatorDataset(train_df.query(f"fold=={fold}"))
 
         set_seed()
@@ -318,12 +295,11 @@ def main():
 
         load_path = f"{config.OUTPUT}/{config.CLS_MODEL}/ventilator_f{fold}_best_model.bin"
         model = VentilatorModelRegr(load_path)
-        #model.load_state_dict(torch.load(load_path))
+
         model.to(device)
         model.freeze_cls()
 
         optimizer = AdamW(model.parameters(), lr=config.LR, weight_decay=config.WEIGHT_DECAY)
-        #optimizer = AdamW(get_optimizer_grouped_parameters(model), lr=config.LR, weight_decay=config.WEIGHT_DECAY)
 
         num_train_steps = int(len(train_loader) * config.N_EPOCHS)
         num_warmup_steps = int(num_train_steps / 10)
@@ -347,6 +323,10 @@ def main():
         for epoch in tqdm(range(config.N_EPOCHS)):
             train_loss, lrs = train_loop(model, optimizer, scheduler, train_loader)
             valid_loss, valid_predict = valid_loop(model, valid_loader, target_dic_inv)
+
+            # norm
+            valid_predict = y_transformer.inverse_transform(valid_predict.reshape(-1, 1)).reshape(-1)
+
             valid_score = np.abs(valid_predict - train_df.query(f"fold=={fold}")['pressure'].values).mean()
 
             mask = (train_df.query(f"fold=={fold}")['u_out'] == -1).values
@@ -376,6 +356,9 @@ def main():
         
         model.load_state_dict(torch.load(model_path))
         test_preds = test_loop(model, test_loader, target_dic_inv)
+        # norm
+        test_preds = y_transformer.inverse_transform(test_preds.reshape(-1, 1)).reshape(-1)
+
         test_preds_lst.append(test_preds)
         
         sub_df['pressure'] = test_preds
