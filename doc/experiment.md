@@ -16,7 +16,7 @@
 |exp126_pseudo|0.1598|||
 |exp127_inc_epoch|0.1566|0.149||
 |exp128_u_out_0||||
-|[exp129_fintune_reg]||||
+|[exp129_fintune_reg]|0.1765|||
 |exp130_target_norm||||
 |||||
 |stacking_01|0.1556|0.146|['exp086_mask', 'exp087_smooth_lag4', 'exp098_transformer', 'exp116_cnn']|
