@@ -25,8 +25,7 @@
 |stacking_03|0.1560|0.147|RC分ける|
 |stacking_04|0.1555|0.146|["exp086_mask", "exp098_transformer", "exp116_cnn"]|
 |[stacking_05]|0.1562||["exp086_mask", "exp098_transformer", "exp116_cnn", "exp126_pseudo"]|
-
-
+|[stacking_06]|0.1482|0.144|ここまで全部|
 
 
 ## ToDo
