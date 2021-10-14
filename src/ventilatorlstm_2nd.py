@@ -58,9 +58,10 @@ from sklearn.preprocessing import RobustScaler
 device = torch.device("cuda")
 
 class config:
-    EXP_NAME = "exp122_skip"
+    EXP_NAME = "exp128_u_out_0"
     CLS_MODEL = "exp087_smooth_lag4"
-    
+    #CLS_MODEL = "exp116_cnn"
+
     INPUT = "/content/"
     OUTPUT = "/content/drive/MyDrive/Study/ventilator-pressure-prediction"
     N_FOLD = 5
@@ -99,9 +100,8 @@ def set_seed(seed=config.SEED):
 
 class VentilatorDataset(Dataset):
     
-    def __init__(self, df, label_dic=None):
+    def __init__(self, df):
         self.dfs = [_df for _, _df in df.groupby("breath_id")]
-        self.label_dic = label_dic
         
     def __len__(self):
         return len(self.dfs)
@@ -110,9 +110,11 @@ class VentilatorDataset(Dataset):
         df = self.dfs[item]
         X = df[config.ALL_FEATURES].values
         y = df['pressure'].values
+        pseudo = df['pseudo'].values
         d = {
             "X": torch.tensor(X).float(),
             "y": torch.tensor(y).float(),
+            "pseudo": torch.tensor(pseudo).long(),
         }
         return d
 
@@ -161,59 +163,38 @@ class VentilatorModelRegr(nn.Module):
         self.cls_model = VentilatorModel()
         self.cls_model.load_state_dict(torch.load(load_path))
 
-        #self.cnn_3_1 = nn.Conv1d(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, kernel_size=3, padding=1)
-        #self.cnn_3_2 = nn.Conv1d(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, kernel_size=3, padding=1)
-        #self.cnn_3_3 = nn.Conv1d(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, kernel_size=3, padding=1)
-        #self.cnn_3_4 = nn.Conv1d(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, kernel_size=3, padding=1)
+        self.cnn_3_1 = nn.Conv1d(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, kernel_size=3, padding=1)
+        self.cnn_3_2 = nn.Conv1d(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, kernel_size=3, padding=1)
+        self.cnn_3_3 = nn.Conv1d(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, kernel_size=3, padding=1)
+        self.cnn_3_4 = nn.Conv1d(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, kernel_size=3, padding=1)
 
-        self.cnn_11 = nn.Conv1d(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE * 2, kernel_size=1, padding=0)
-        self.cnn_12 = nn.Conv1d(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE * 2, kernel_size=1, padding=0)
-
-        self.cnn_31 = nn.Conv1d(config.HIDDEN_SIZE * 4 + config.EMBED_SIZE, config.HIDDEN_SIZE * 2, kernel_size=3, padding=1)
-        self.cnn_32 = nn.Conv1d(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE * 2, kernel_size=3, padding=1)
-
-        self.cnn_51 = nn.Conv1d(config.HIDDEN_SIZE * 4 + config.EMBED_SIZE, config.HIDDEN_SIZE * 2, kernel_size=5, padding=2)
-        self.cnn_52 = nn.Conv1d(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE * 2, kernel_size=5, padding=2)
-
-        self.regression = nn.Sequential(
-            nn.Linear(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE * 2),
-            nn.LayerNorm(config.HIDDEN_SIZE * 2),
+        self.head = nn.Sequential(
+            nn.Linear(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, config.HIDDEN_SIZE * 2 + config.EMBED_SIZE),
+            nn.LayerNorm(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE),
             nn.ReLU(),
-            nn.Linear(config.HIDDEN_SIZE * 2, 1),
+            nn.Linear(config.HIDDEN_SIZE * 2 + config.EMBED_SIZE, 1),
         )
 
-    def forward(self, X, y=None):
-        emb_x = self.cls_model(X)
-
-        emb_x = emb_x.permute(0, 2, 1)
-
-        #out = F.relu(self.cnn_3_1(out))
-        #out = F.relu(self.cnn_3_2(out))
-        #out = F.relu(self.cnn_3_3(out))
-        #out = F.relu(self.cnn_3_4(out))
-
-        out = F.relu(self.cnn_11(emb_x))
-        out = F.relu(self.cnn_12(out))
-
-        out = torch.cat((out, emb_x), 1)
-
-        out = F.relu(self.cnn_31(out))
-        out = F.relu(self.cnn_32(out))
-
-        out = torch.cat((out, emb_x), 1)
-
-        out = F.relu(self.cnn_51(out))
-        out = F.relu(self.cnn_52(out))
+    def forward(self, X, y=None, pseudo=None):
+        out = self.cls_model(X)
 
         out = out.permute(0, 2, 1)
+        out = F.relu(self.cnn_3_1(out))
+        out = F.relu(self.cnn_3_2(out))
+        out = F.relu(self.cnn_3_3(out))
+        out = F.relu(self.cnn_3_4(out))
+        out = out.permute(0, 2, 1)
 
-        regr = self.regression(out)
+        regr = self.head(out)
 
         if y is None:
             loss = None
-        else:
+        elif pseudo is None:
             mask = X[:, :, 5] == -1
             loss = self.loss_fn(regr.squeeze(2), y, mask)
+        else:
+            mask = X[:, :, 5] == -1
+            loss = self.pseudo_loss_fn(regr.squeeze(2), y, mask, pseudo)
             
         return regr, loss
     
@@ -221,6 +202,12 @@ class VentilatorModelRegr(nn.Module):
         criterion = nn.SmoothL1Loss(reduction='none')
         l1_loss = criterion(y_pred, y_true)
         loss = l1_loss[mask].mean() + l1_loss[mask==0].mean() * 0.5
+        return loss
+
+    def pseudo_loss_fn(self, y_pred, y_true, mask, pseudo):
+        criterion = nn.SmoothL1Loss(reduction='none')
+        l1_loss = criterion(y_pred, y_true)
+        loss = l1_loss[mask].mean() + (l1_loss[mask==0] * (pseudo[mask==0] == 0)).mean() * 0.5
         return loss
 
     def freeze_cls(self):
@@ -232,7 +219,7 @@ def train_loop(model, optimizer, scheduler, loader):
     model.train()
     optimizer.zero_grad()
     for d in loader:
-        out, loss = model(d['X'].to(device), d['y'].to(device))
+        out, loss = model(d['X'].to(device), d['y'].to(device), d['pseudo'].to(device))
         
         losses.append(loss.item())
         step_lr = np.array([param_group["lr"] for param_group in optimizer.param_groups]).mean()
@@ -264,6 +251,21 @@ def test_loop(model, loader, target_dic_inv):
         predicts.append(out.cpu())
     return torch.vstack(predicts).squeeze(2).numpy().reshape(-1)
 
+def get_optimizer_grouped_parameters(model):
+    optimizer_grouped_parameters = [
+        {
+            "params": [p for n, p in model.named_parameters() if 'cls_model' in n],
+            "weight_decay": config.WEIGHT_DECAY,
+            "lr": 1e-5,
+        },
+        {
+            "params": [p for n, p in model.named_parameters() if 'cls_model' not in n],
+            "weight_decay": config.WEIGHT_DECAY,
+            "lr": 1e-4,
+        },
+    ]
+    return optimizer_grouped_parameters
+
 def main():
     # load train data
     train_df = pd.read_feather(f"{config.OUTPUT}/features/train_v1_all_norm.ftr")
@@ -272,11 +274,17 @@ def main():
     train_df['pressure'] = _df['pressure']
     train_df['breath_id'] = _df['breath_id']
     train_df = train_df.fillna(0)
+    train_df['pseudo'] = 0
     del _df
+
     # load test data
     test_df = pd.read_feather(f"{config.OUTPUT}/features/test_v1_all_norm.ftr")
     test_df['breath_id'] = pd.read_csv(f"{config.INPUT}/test.csv")['breath_id']
-    test_df['pressure'] = -1
+    #test_df['pressure'] = -1
+    _df = pd.read_csv(f"{config.OUTPUT}/result/stacking_01.csv")
+    test_df['pressure'] = _df['pressure']
+    test_df['pseudo'] = 1
+
     test_df = test_df.fillna(0)
     sub_df = pd.read_csv(f"{config.INPUT}/sample_submission.csv")
 
@@ -296,8 +304,10 @@ def main():
     
     for fold in range(config.N_FOLD):
         print(f'Fold-{fold}')
-        train_dset = VentilatorDataset(train_df.query(f"fold!={fold}"), target_dic)
-        valid_dset = VentilatorDataset(train_df.query(f"fold=={fold}"), target_dic)
+    
+        #train_dset = VentilatorDataset(train_df.query(f"fold!={fold}"), target_dic)
+        train_dset = VentilatorDataset(pd.concat([train_df.query(f"fold!={fold}"), test_df], axis=0).reset_index(drop=True))
+        valid_dset = VentilatorDataset(train_df.query(f"fold=={fold}"))
 
         set_seed()
         train_loader = DataLoader(train_dset, batch_size=config.BS,
@@ -308,10 +318,12 @@ def main():
 
         load_path = f"{config.OUTPUT}/{config.CLS_MODEL}/ventilator_f{fold}_best_model.bin"
         model = VentilatorModelRegr(load_path)
+        #model.load_state_dict(torch.load(load_path))
         model.to(device)
         model.freeze_cls()
 
         optimizer = AdamW(model.parameters(), lr=config.LR, weight_decay=config.WEIGHT_DECAY)
+        #optimizer = AdamW(get_optimizer_grouped_parameters(model), lr=config.LR, weight_decay=config.WEIGHT_DECAY)
 
         num_train_steps = int(len(train_loader) * config.N_EPOCHS)
         num_warmup_steps = int(num_train_steps / 10)
@@ -413,7 +425,4 @@ if __name__ == "__main__":
     main()
 
 wandb.finish()
-
-# Commented out IPython magic to ensure Python compatibility.
-# %debug
 
