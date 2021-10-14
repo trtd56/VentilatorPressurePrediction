@@ -12,14 +12,17 @@
 |[exp122_skip]||||
 |exp123_3rd||||
 |exp124_inc_epoch||||
-|exp125_dec_epoch||||
-|exp125_dec_epoch||||
-|exp126_pseudo||||
+|exp125_dec_epoch|0.1669|||
+|exp126_pseudo|0.1598|||
+|exp127_inc_epoch||||
 |||||
 |stacking_01|0.1556|0.146|['exp086_mask', 'exp087_smooth_lag4', 'exp098_transformer', 'exp116_cnn']|
 |stacking_01|0.1556|0.148|mean_pp|
 |stacking_02|0.1561|0.147|no mask|
 |stacking_03|0.1560|0.147|RC分ける|
+|stacking_04|0.1555||["exp086_mask", "exp098_transformer", "exp116_cnn"]|
+|stacking_05|0.1562||["exp086_mask", "exp098_transformer", "exp116_cnn", "exp126_pseudo"]|
+
 
 ## ToDo
 
