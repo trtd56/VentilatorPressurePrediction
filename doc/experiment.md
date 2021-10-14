@@ -14,7 +14,7 @@
 |exp124_inc_epoch||||
 |exp125_dec_epoch|0.1669|||
 |exp126_pseudo|0.1598|||
-|exp127_inc_epoch|0.1566|||
+|exp127_inc_epoch|0.1566|0.149||
 |exp128_u_out_0||||
 |[exp129_fintune_reg]||||
 |exp130_target_norm||||
