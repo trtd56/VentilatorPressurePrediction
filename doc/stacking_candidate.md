@@ -14,7 +14,7 @@
 |exp082_smooth04|0.1674|0.154||Y|
 |[exp083_smooth2_4]|0.1653|0.152|median_pp|Y|
 |exp085_smooth1_2_4|0.1647|0.151|median_pp|Y|
-|[exp086_reg_diff]|0.1808|0.188|diff3||
+|[exp086_reg_diff]|0.1808|0.188|diff3|N|
 |exp086_mask|0.1653|0.150||Y|
 |exp087_smooth_lag4|0.1648|0.150||Y|
 |exp098_transformer|0.1627|0.150|median_pp|Y|
