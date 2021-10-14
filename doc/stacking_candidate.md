@@ -3,7 +3,7 @@
 |--|--|--|--|--|
 |[exp022_cos]|0.212|0.244|||
 |[exp023_1dcnn]|0.387|0.559|||
-|exp045_now_best|0.1885|0.195|post processing & median||
+|exp045_now_best|0.1885|0.195|post processing & median|N|
 |[exp068_categorical]|0.1745|0.165|mean_pp||
 |exp071_no_dropout|0.170|0.153|median_pp|Y|
 |exp074_layer5|0.1704|0.157||Y|
@@ -18,9 +18,9 @@
 |exp086_mask|0.1653|0.150||Y|
 |exp087_smooth_lag4|0.1648|0.150||Y|
 |exp098_transformer|0.1627|0.150|median_pp|Y|
-|exp110_mlp2|0.1673||||
+|exp110_mlp2|0.1673|||(Y)|
 |exp116_cnn|0.1622|0.150||Y|
-|exp125_dec_epoch|0.1669||||
+|exp125_dec_epoch|0.1669|||N|
 |exp126_pseudo|0.1598|||N|
 |exp127_inc_epoch|0.1566|0.149||N|
 |[exp129_fintune_reg]|0.1765|0.165|||
