@@ -22,7 +22,8 @@
 |[exp132_diff]|0.1619|||
 |||||
 |[exp133_all_features]|0.1691|||
-|exp134_drop_rolling||||
+|exp134_drop_rolling|0.1679|||
+|exp135_drop_emw||||
 |||||
 |stacking_01|0.1556|0.146|['exp086_mask', 'exp087_smooth_lag4', 'exp098_transformer', 'exp116_cnn']|
 |stacking_01|0.1556|0.148|mean_pp|
