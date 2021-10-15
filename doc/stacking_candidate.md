@@ -23,7 +23,7 @@
 |exp126_pseudo|0.1598|||N|
 |exp127_inc_epoch|0.1566|0.149||N|
 |[exp129_fintune_reg]|0.1765|0.165||(Y)|
-
+|[exp133_all_features]|0.1691|||(Y)|
 
 [exp023_1dcnn]:https://www.kaggle.com/takamichitoda/ventilator-1dcnn-lstm?scriptVersionId=76092602
 [exp068_categorical]:https://www.kaggle.com/takamichitoda/ventilator-train-classification/notebook?scriptVersionId=76446772
