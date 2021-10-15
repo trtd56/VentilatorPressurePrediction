@@ -6,7 +6,7 @@
 |[exp068_categorical]|0.1745|0.165|mean_pp||
 |exp071_no_dropout|0.170|0.153|median_pp|Y|
 |exp074_layer5|0.1704|0.157||Y|
-|[exp075_dropout0]|0.1708|0.155|median_pp||
+|[exp075_dropout0]|0.1708|0.155|median_pp|(Y)|
 |exp079_smooth|0.1694|||Y|
 |[exp080_conti_rc]|0.1714|||(Y)|
 |exp081_smooth02|0.1676|0.153|median_pp|Y|
