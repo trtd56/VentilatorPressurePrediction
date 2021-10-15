@@ -3,7 +3,7 @@
 |--|--|--|--|--|
 |[exp023_1dcnn]|0.387|0.559|||
 |exp045_now_best|0.1885|0.195|post processing & median|N|
-|[exp068_categorical]|0.1745|0.165|mean_pp||
+|[exp068_categorical]|0.1745|0.165|mean_pp|N|
 |exp071_no_dropout|0.170|0.153|median_pp|Y|
 |exp074_layer5|0.1704|0.157||Y|
 |[exp075_dropout0]|0.1708|0.155|median_pp|(Y)|
