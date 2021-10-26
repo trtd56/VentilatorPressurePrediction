@@ -54,7 +54,7 @@
 [exp132_diff]:https://github.com/trtd56/VentilatorPressurePrediction/blob/211c29bbefcf6f68b0b54c4b0d7b26b52e103341/src/ventilatorlstm_2nd.py
 
 [exp133_all_features]:https://github.com/trtd56/VentilatorPressurePrediction/blob/1243ebe0eaf94bc5b6d7df5673befbbd520aa2a6/src/ventilatorlstm_1st.py
-[exp137_transformer_head]:https://www.kaggle.com/takamichitoda/ventilator-fine-tune-regression?scriptVersionId=78092522
+[exp137_transformer_head]:https://www.kaggle.com/takamichitoda/ventilator-fine-tune-regression?scriptVersionId=78093127
 
 [stacking_05]:https://github.com/trtd56/VentilatorPressurePrediction/blob/0b819b0968eaa91dace97a1b95407f99e3159e15/src/ventilatorlstm_stacking.py
 [stacking_07]:https://github.com/trtd56/VentilatorPressurePrediction/blob/5c8f2317926928c3c21971ef02b97e0f27d31358/src/ventilatorlstm_stacking.py
