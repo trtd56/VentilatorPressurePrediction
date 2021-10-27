@@ -29,6 +29,8 @@
 |[exp138_classifiy]||||
 |[exp139_target_encoding]|0.1678|0.1557||
 |[exp140_inc_epoch]|0.1888|||
+|exp141_selu|||seluではない|
+|exp142_selu||||
 |||||
 |stacking_01|0.1556|0.146|['exp086_mask', 'exp087_smooth_lag4', 'exp098_transformer', 'exp116_cnn']|
 |stacking_01|0.1556|0.148|mean_pp|
@@ -44,7 +46,6 @@
 
 ## ToDo
 - LIME
-- 活性化関数
 - R/Cごとに9個のモデルを作る？
 - FFT特徴
 
