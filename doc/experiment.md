@@ -28,6 +28,7 @@
 |[exp137_transformer_head]|0.1665|0.1545||
 |[exp138_classifiy]||||
 |[exp139_target_encoding]|0.1678|0.1557||
+|[exp140_inc_epoch]|0.1888|||
 |||||
 |stacking_01|0.1556|0.146|['exp086_mask', 'exp087_smooth_lag4', 'exp098_transformer', 'exp116_cnn']|
 |stacking_01|0.1556|0.148|mean_pp|
@@ -59,6 +60,7 @@
 [exp137_transformer_head]:https://www.kaggle.com/takamichitoda/ventilator-fine-tune-regression?scriptVersionId=78093127
 [exp138_classifiy]:https://www.kaggle.com/takamichitoda/ventilator-1dcnn-lstm?scriptVersionId=78097208
 [exp139_target_encoding]:https://github.com/trtd56/VentilatorPressurePrediction/blob/1a73c8cad6a08c9dde1729ad8292701e9e827f87/src/ventilatorlstm_1st.py
+[exp140_inc_epoch]:xxx
 
 [stacking_05]:https://github.com/trtd56/VentilatorPressurePrediction/blob/0b819b0968eaa91dace97a1b95407f99e3159e15/src/ventilatorlstm_stacking.py
 [stacking_07]:https://github.com/trtd56/VentilatorPressurePrediction/blob/5c8f2317926928c3c21971ef02b97e0f27d31358/src/ventilatorlstm_stacking.py
