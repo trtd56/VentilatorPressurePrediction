@@ -25,7 +25,7 @@
 |exp134_drop_rolling|0.1679|||
 |exp135_drop_emw|0.1678|||
 |exp136_drop_cont_v2|0.1669|||
-|[exp137_transformer_head]||||
+|[exp137_transformer_head]|0.1665|0.1545||
 |[exp138_classifiy]||||
 |[exp139_target_encoding]||||
 |||||
