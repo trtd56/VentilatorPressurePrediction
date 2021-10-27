@@ -25,9 +25,9 @@
 |exp134_drop_rolling|0.1679|||
 |exp135_drop_emw|0.1678|||
 |exp136_drop_cont_v2|0.1669|||
-|[exp137_transformer_head]||||
+|[exp137_transformer_head]|0.1665|0.1545||
 |[exp138_classifiy]||||
-|[exp139_target_encoding]||||
+|[exp139_target_encoding]|0.1678|0.1557||
 |||||
 |stacking_01|0.1556|0.146|['exp086_mask', 'exp087_smooth_lag4', 'exp098_transformer', 'exp116_cnn']|
 |stacking_01|0.1556|0.148|mean_pp|
@@ -43,7 +43,9 @@
 
 ## ToDo
 - LIME
-- target encoding
+- 活性化関数
+- R/Cごとに9個のモデルを作る？
+- FFT特徴
 
 [exp117_cnn_2]:https://github.com/trtd56/VentilatorPressurePrediction/blob/a3453b6ab14528efa19cf7e7e77558348333a384/src/ventilatorlstm_2nd.py
 [exp120_mcnn]:https://github.com/trtd56/VentilatorPressurePrediction/blob/e21fcc9d85eb3c07e84b14cfa1a15d8c14792176/src/ventilatorlstm_2nd.py
@@ -56,7 +58,7 @@
 [exp133_all_features]:https://github.com/trtd56/VentilatorPressurePrediction/blob/1243ebe0eaf94bc5b6d7df5673befbbd520aa2a6/src/ventilatorlstm_1st.py
 [exp137_transformer_head]:https://www.kaggle.com/takamichitoda/ventilator-fine-tune-regression?scriptVersionId=78093127
 [exp138_classifiy]:https://www.kaggle.com/takamichitoda/ventilator-1dcnn-lstm?scriptVersionId=78097208
-[exp139_target_encoding]:xxx
+[exp139_target_encoding]:https://github.com/trtd56/VentilatorPressurePrediction/blob/1a73c8cad6a08c9dde1729ad8292701e9e827f87/src/ventilatorlstm_1st.py
 
 [stacking_05]:https://github.com/trtd56/VentilatorPressurePrediction/blob/0b819b0968eaa91dace97a1b95407f99e3159e15/src/ventilatorlstm_stacking.py
 [stacking_07]:https://github.com/trtd56/VentilatorPressurePrediction/blob/5c8f2317926928c3c21971ef02b97e0f27d31358/src/ventilatorlstm_stacking.py
