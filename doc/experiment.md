@@ -19,7 +19,7 @@
 |[exp129_fintune_reg]|0.1765|0.165||
 |exp130_target_norm||||
 |[exp131_tanh]||||
-|[exp132_diff]|0.1619|||
+|[exp132_diff]|0.1619|0.1512||
 |||||
 |[exp133_all_features]|0.1691|||
 |exp134_drop_rolling|0.1679|||
