@@ -26,6 +26,7 @@
 |exp135_drop_emw|0.1678|||
 |exp136_drop_cont_v2|0.1669|||
 |[exp137_transformer_head]||||
+|[exp138_classifiy]||||
 |||||
 |stacking_01|0.1556|0.146|['exp086_mask', 'exp087_smooth_lag4', 'exp098_transformer', 'exp116_cnn']|
 |stacking_01|0.1556|0.148|mean_pp|
@@ -55,6 +56,7 @@
 
 [exp133_all_features]:https://github.com/trtd56/VentilatorPressurePrediction/blob/1243ebe0eaf94bc5b6d7df5673befbbd520aa2a6/src/ventilatorlstm_1st.py
 [exp137_transformer_head]:https://www.kaggle.com/takamichitoda/ventilator-fine-tune-regression?scriptVersionId=78093127
+[exp138_classifiy]:https://www.kaggle.com/takamichitoda/ventilator-1dcnn-lstm?scriptVersionId=78097208
 
 [stacking_05]:https://github.com/trtd56/VentilatorPressurePrediction/blob/0b819b0968eaa91dace97a1b95407f99e3159e15/src/ventilatorlstm_stacking.py
 [stacking_07]:https://github.com/trtd56/VentilatorPressurePrediction/blob/5c8f2317926928c3c21971ef02b97e0f27d31358/src/ventilatorlstm_stacking.py
