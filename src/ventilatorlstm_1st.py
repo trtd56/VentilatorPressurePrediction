@@ -58,7 +58,7 @@ from sklearn.preprocessing import RobustScaler
 device = torch.device("cuda")
 
 class config:
-    EXP_NAME = "exp139_target_encoding"
+    EXP_NAME = "exp140_inc_epoch"
 
     INPUT = "/content/"
     OUTPUT = "/content/drive/MyDrive/Study/ventilator-pressure-prediction"
@@ -66,11 +66,12 @@ class config:
     SEED = 0
     
     LR = 5e-3
-    N_EPOCHS = 50
+    N_EPOCHS = 300
     EMBED_SIZE =  64
     HIDDEN_SIZE = 256
     BS = 512
     WEIGHT_DECAY = 1e-3
+    EARLY_STOP = 8
 
     CATE_FEATURES = ['R_cate', 'C_cate', 'RC_dot', 'RC_sum']
     CONT_FEATURES = ['u_in', 'u_out', 'time_step'] + ['u_in_cumsum', 'u_in_cummean', 'area', 'cross', 'cross2']
@@ -81,11 +82,11 @@ class config:
     LAG_FEATURES += [f'u_in_time{i}' for i in range(1, USE_LAG+1)]
     LAG_FEATURES += [f'u_out_lag_{i}' for i in range(1, USE_LAG+1)]
 
-    TARGET_FEATURES = [
-        'R_mean', 'R_std', 'R_mean_u_out0', 'R_std_u_out0',
-        'C_mean', 'C_std', 'C_mean_u_out0', 'C_std_u_out0',
-        'RC_mean', 'RC_std', 'RC_mean_u_out0', 'RC_std_u_out0'
-    ]
+    #TARGET_FEATURES = [
+    #    'R_mean', 'R_std', 'R_mean_u_out0', 'R_std_u_out0',
+    #    'C_mean', 'C_std', 'C_mean_u_out0', 'C_std_u_out0',
+    #    'RC_mean', 'RC_std', 'RC_mean_u_out0', 'RC_std_u_out0'
+    #]
 
     #LAG_BACK_FEATURES = [f'u_in_lag_{i}_back' for i in range(1, USE_LAG+1)]
     #LAG_BACK_FEATURES += [f'u_in_time{i}_back' for i in range(1, USE_LAG+1)]
@@ -104,8 +105,8 @@ class config:
     #ROLLING_FEATURES += [f"u_in_rolling_min{w}" for w in ROLLING]
     #ROLLING_FEATURES += [f"u_in_rolling_std{w}" for w in ROLLING]
 
-    ALL_FEATURES = CATE_FEATURES + CONT_FEATURES + LAG_FEATURES + TARGET_FEATURES #+ LAG_BACK_FEATURES + CONT_FEATURES_V2 #+ EWM_FEATURES #+ ROLLING_FEATURES
-    NORM_FEATURES = CONT_FEATURES + LAG_FEATURES + TARGET_FEATURES #+ LAG_BACK_FEATURES + CONT_FEATURES_V2 #+ EWM_FEATURES #+ ROLLING_FEATURES
+    ALL_FEATURES = CATE_FEATURES + CONT_FEATURES + LAG_FEATURES #+ TARGET_FEATURES #+ LAG_BACK_FEATURES + CONT_FEATURES_V2 #+ EWM_FEATURES #+ ROLLING_FEATURES
+    NORM_FEATURES = CONT_FEATURES + LAG_FEATURES #+ TARGET_FEATURES #+ LAG_BACK_FEATURES + CONT_FEATURES_V2 #+ EWM_FEATURES #+ ROLLING_FEATURES
     
     NOT_WATCH_PARAM = ['INPUT']
 
@@ -156,11 +157,14 @@ class VentilatorModel(nn.Module):
             nn.LayerNorm(config.EMBED_SIZE),
         )
         
+
+
         self.lstm = nn.LSTM(config.EMBED_SIZE, config.HIDDEN_SIZE, batch_first=True, bidirectional=True, num_layers=4, dropout=0.0)
         self.head = nn.Sequential(
             nn.Linear(config.HIDDEN_SIZE * 2, config.HIDDEN_SIZE * 2),
             nn.LayerNorm(config.HIDDEN_SIZE * 2),
-            nn.ReLU(),
+            #nn.ReLU(),
+            nn.SELU(),
             nn.Linear(config.HIDDEN_SIZE * 2, 950),
         )
 
@@ -336,6 +340,7 @@ def main():
         os.makedirs(f'{config.OUTPUT}/{config.EXP_NAME}', exist_ok=True)
         model_path = f"{config.OUTPUT}/{config.EXP_NAME}/ventilator_f{fold}_best_model.bin"
         
+        patient = 0
         valid_best_score = float('inf')
         valid_best_score_mask = float('inf')
         for epoch in tqdm(range(config.N_EPOCHS)):
@@ -354,6 +359,9 @@ def main():
 
             if valid_score_mask < valid_best_score_mask:
                 valid_best_score_mask = valid_score_mask
+                patient = 0
+            else:
+                patient += 1
 
             wandb.log({
                 "train_loss": train_loss,
@@ -367,6 +375,9 @@ def main():
             
             torch.cuda.empty_cache()
             gc.collect()
+
+            if patient > config.EARLY_STOP:
+                break
         
         model.load_state_dict(torch.load(model_path))
         test_preds = test_loop(model, test_loader, target_dic_inv)
