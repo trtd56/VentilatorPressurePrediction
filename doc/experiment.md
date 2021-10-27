@@ -43,7 +43,7 @@
 
 ## ToDo
 - LIME
-- target encoding
+- 活性化関数
 
 [exp117_cnn_2]:https://github.com/trtd56/VentilatorPressurePrediction/blob/a3453b6ab14528efa19cf7e7e77558348333a384/src/ventilatorlstm_2nd.py
 [exp120_mcnn]:https://github.com/trtd56/VentilatorPressurePrediction/blob/e21fcc9d85eb3c07e84b14cfa1a15d8c14792176/src/ventilatorlstm_2nd.py
@@ -56,7 +56,7 @@
 [exp133_all_features]:https://github.com/trtd56/VentilatorPressurePrediction/blob/1243ebe0eaf94bc5b6d7df5673befbbd520aa2a6/src/ventilatorlstm_1st.py
 [exp137_transformer_head]:https://www.kaggle.com/takamichitoda/ventilator-fine-tune-regression?scriptVersionId=78093127
 [exp138_classifiy]:https://www.kaggle.com/takamichitoda/ventilator-1dcnn-lstm?scriptVersionId=78097208
-[exp139_target_encoding]:xxx
+[exp139_target_encoding]:https://github.com/trtd56/VentilatorPressurePrediction/blob/1a73c8cad6a08c9dde1729ad8292701e9e827f87/src/ventilatorlstm_1st.py
 
 [stacking_05]:https://github.com/trtd56/VentilatorPressurePrediction/blob/0b819b0968eaa91dace97a1b95407f99e3159e15/src/ventilatorlstm_stacking.py
 [stacking_07]:https://github.com/trtd56/VentilatorPressurePrediction/blob/5c8f2317926928c3c21971ef02b97e0f27d31358/src/ventilatorlstm_stacking.py
