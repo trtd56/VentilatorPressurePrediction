@@ -58,7 +58,7 @@ from sklearn.preprocessing import RobustScaler
 device = torch.device("cuda")
 
 class config:
-    EXP_NAME = "exp133_all_features"
+    EXP_NAME = "exp139_target_encoding"
 
     INPUT = "/content/"
     OUTPUT = "/content/drive/MyDrive/Study/ventilator-pressure-prediction"
@@ -81,26 +81,31 @@ class config:
     LAG_FEATURES += [f'u_in_time{i}' for i in range(1, USE_LAG+1)]
     LAG_FEATURES += [f'u_out_lag_{i}' for i in range(1, USE_LAG+1)]
 
-    LAG_BACK_FEATURES = [f'u_in_lag_{i}_back' for i in range(1, USE_LAG+1)]
-    LAG_BACK_FEATURES += [f'u_in_time{i}_back' for i in range(1, USE_LAG+1)]
-    LAG_BACK_FEATURES += [f'u_out_lag_{i}_back' for i in range(1, USE_LAG+1)]
+    TARGET_FEATURES = [
+        'R_mean', 'R_std', 'R_mean_u_out0', 'R_std_u_out0',
+        'C_mean', 'C_std', 'C_mean_u_out0', 'C_std_u_out0',
+        'RC_mean', 'RC_std', 'RC_mean_u_out0', 'RC_std_u_out0'
+    ]
 
-    CONT_FEATURES_V2 = ['u_in_mean', 'u_in_std', 'breath_id_u_out_mean', 'last_value_u_in', 'first_value_u_in']
+    #LAG_BACK_FEATURES = [f'u_in_lag_{i}_back' for i in range(1, USE_LAG+1)]
+    #LAG_BACK_FEATURES += [f'u_in_time{i}_back' for i in range(1, USE_LAG+1)]
+    #LAG_BACK_FEATURES += [f'u_out_lag_{i}_back' for i in range(1, USE_LAG+1)]
 
-    EWM_LST = [8, 16, 32]
-    EWM_FEATURES = [f'ewm_u_in_mean_{i}' for i in EWM_LST]
-    EWM_FEATURES += [f'ewm_u_in_std_{i}' for i in EWM_LST]
-    EWM_FEATURES += [f'ewm_u_in_corr_{i}' for i in EWM_LST]
+    #CONT_FEATURES_V2 = ['u_in_mean', 'u_in_std', 'breath_id_u_out_mean', 'last_value_u_in', 'first_value_u_in']
 
-    ROLLING = [2, 4, 8]
-    ROLLING_FEATURES = [f"u_in_rolling_mean{w}" for w in ROLLING]
-    ROLLING_FEATURES += [f"u_in_rolling_max{w}" for w in ROLLING]
-    ROLLING_FEATURES += [f"u_in_rolling_min{w}" for w in ROLLING]
-    ROLLING_FEATURES += [f"u_in_rolling_std{w}" for w in ROLLING]
+    #EWM_LST = [8, 16, 32]
+    #EWM_FEATURES = [f'ewm_u_in_mean_{i}' for i in EWM_LST]
+    #EWM_FEATURES += [f'ewm_u_in_std_{i}' for i in EWM_LST]
+    #EWM_FEATURES += [f'ewm_u_in_corr_{i}' for i in EWM_LST]
 
+    #ROLLING = [2, 4, 8]
+    #ROLLING_FEATURES = [f"u_in_rolling_mean{w}" for w in ROLLING]
+    #ROLLING_FEATURES += [f"u_in_rolling_max{w}" for w in ROLLING]
+    #ROLLING_FEATURES += [f"u_in_rolling_min{w}" for w in ROLLING]
+    #ROLLING_FEATURES += [f"u_in_rolling_std{w}" for w in ROLLING]
 
-    ALL_FEATURES = CATE_FEATURES + CONT_FEATURES + LAG_FEATURES + LAG_BACK_FEATURES + CONT_FEATURES_V2 + EWM_FEATURES + ROLLING_FEATURES
-    NORM_FEATURES = CONT_FEATURES + LAG_FEATURES + LAG_BACK_FEATURES + CONT_FEATURES_V2 + EWM_FEATURES + ROLLING_FEATURES
+    ALL_FEATURES = CATE_FEATURES + CONT_FEATURES + LAG_FEATURES + TARGET_FEATURES #+ LAG_BACK_FEATURES + CONT_FEATURES_V2 #+ EWM_FEATURES #+ ROLLING_FEATURES
+    NORM_FEATURES = CONT_FEATURES + LAG_FEATURES + TARGET_FEATURES #+ LAG_BACK_FEATURES + CONT_FEATURES_V2 #+ EWM_FEATURES #+ ROLLING_FEATURES
     
     NOT_WATCH_PARAM = ['INPUT']
 
@@ -259,6 +264,7 @@ def main():
     train_df = pd.concat([
                           pd.read_feather(f"{config.OUTPUT}/features/train_v1_all_norm.ftr"),
                           pd.read_feather(f"{config.OUTPUT}/features/train_v2_all_norm.ftr"),
+                          pd.read_feather(f"{config.OUTPUT}/features/train_v3_all_norm.ftr"),
     ], axis=1)
     _df = pd.read_csv(f"{config.INPUT}/train.csv")
     train_df['id'] = _df['id']
@@ -270,6 +276,7 @@ def main():
     test_df = pd.concat([
                           pd.read_feather(f"{config.OUTPUT}/features/test_v1_all_norm.ftr"),
                           pd.read_feather(f"{config.OUTPUT}/features/test_v2_all_norm.ftr"),
+                          pd.read_feather(f"{config.OUTPUT}/features/test_v3_all_norm.ftr"),
     ], axis=1)
     test_df['breath_id'] = pd.read_csv(f"{config.INPUT}/test.csv")['breath_id']
     test_df['pressure'] = -1
@@ -290,7 +297,13 @@ def main():
     test_loader = DataLoader(test_dset, batch_size=config.BS,
                              pin_memory=True, shuffle=False, drop_last=False, num_workers=os.cpu_count())
     
+    #oof_df = pd.read_csv(f"{config.OUTPUT}/{config.EXP_NAME}/oof.csv")
+    #oof = oof_df['oof'].values
+    #del oof_df
+    #gc.collect()
     for fold in range(config.N_FOLD):
+        #if fold in [0, 1]:
+        #    continue
         print(f'Fold-{fold}')
         train_dset = VentilatorDataset(train_df.query(f"fold!={fold}"), target_dic)
         valid_dset = VentilatorDataset(train_df.query(f"fold=={fold}"), target_dic)
