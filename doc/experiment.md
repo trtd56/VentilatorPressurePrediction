@@ -21,7 +21,13 @@
 |[exp131_tanh]||||
 |[exp132_diff]|0.1619|||
 |||||
-|[exp133_all_features]||||
+|[exp133_all_features]|0.1691|||
+|exp134_drop_rolling|0.1679|||
+|exp135_drop_emw|0.1678|||
+|exp136_drop_cont_v2|0.1669|||
+|[exp137_transformer_head]||||
+|[exp138_classifiy]||||
+|[exp139_target_encoding]||||
 |||||
 |stacking_01|0.1556|0.146|['exp086_mask', 'exp087_smooth_lag4', 'exp098_transformer', 'exp116_cnn']|
 |stacking_01|0.1556|0.148|mean_pp|
@@ -31,11 +37,13 @@
 |[stacking_05]|0.1562||["exp086_mask", "exp098_transformer", "exp116_cnn", "exp126_pseudo"]|
 |stacking_06|0.1482|0.144|ここまで全部|
 |[stacking_07]|0.1478|0.145|pseudoもいれちゃう|
-
-
+|stacking_08|0.1478|0.144||
+|stacking_09|0.1475|0.145||
+|stacking_10|0.1477|0.144||
 
 ## ToDo
 - LIME
+- target encoding
 
 [exp117_cnn_2]:https://github.com/trtd56/VentilatorPressurePrediction/blob/a3453b6ab14528efa19cf7e7e77558348333a384/src/ventilatorlstm_2nd.py
 [exp120_mcnn]:https://github.com/trtd56/VentilatorPressurePrediction/blob/e21fcc9d85eb3c07e84b14cfa1a15d8c14792176/src/ventilatorlstm_2nd.py
@@ -44,5 +52,11 @@
 [exp128_u_out_0]:https://github.com/trtd56/VentilatorPressurePrediction/blob/0ee49c9b6bfad980427280d620456ca29a22199d/src/ventilatorlstm_2nd.py
 [exp131_tanh]:https://github.com/trtd56/VentilatorPressurePrediction/blob/5f42a550ccca23f274e8c4754d49a55a07a3247d/src/ventilatorlstm_2nd.py
 [exp132_diff]:https://github.com/trtd56/VentilatorPressurePrediction/blob/211c29bbefcf6f68b0b54c4b0d7b26b52e103341/src/ventilatorlstm_2nd.py
+
+[exp133_all_features]:https://github.com/trtd56/VentilatorPressurePrediction/blob/1243ebe0eaf94bc5b6d7df5673befbbd520aa2a6/src/ventilatorlstm_1st.py
+[exp137_transformer_head]:https://www.kaggle.com/takamichitoda/ventilator-fine-tune-regression?scriptVersionId=78093127
+[exp138_classifiy]:https://www.kaggle.com/takamichitoda/ventilator-1dcnn-lstm?scriptVersionId=78097208
+[exp139_target_encoding]:xxx
+
 [stacking_05]:https://github.com/trtd56/VentilatorPressurePrediction/blob/0b819b0968eaa91dace97a1b95407f99e3159e15/src/ventilatorlstm_stacking.py
 [stacking_07]:https://github.com/trtd56/VentilatorPressurePrediction/blob/5c8f2317926928c3c21971ef02b97e0f27d31358/src/ventilatorlstm_stacking.py
