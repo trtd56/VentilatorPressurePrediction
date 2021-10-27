@@ -60,7 +60,7 @@
 [exp137_transformer_head]:https://www.kaggle.com/takamichitoda/ventilator-fine-tune-regression?scriptVersionId=78093127
 [exp138_classifiy]:https://www.kaggle.com/takamichitoda/ventilator-1dcnn-lstm?scriptVersionId=78097208
 [exp139_target_encoding]:https://github.com/trtd56/VentilatorPressurePrediction/blob/1a73c8cad6a08c9dde1729ad8292701e9e827f87/src/ventilatorlstm_1st.py
-[exp140_inc_epoch]:xxx
+[exp140_inc_epoch]:https://github.com/trtd56/VentilatorPressurePrediction/blob/21e8d830f404bac1156595eaeb5eb3ad7f08eced/src/ventilatorlstm_1st.py
 
 [stacking_05]:https://github.com/trtd56/VentilatorPressurePrediction/blob/0b819b0968eaa91dace97a1b95407f99e3159e15/src/ventilatorlstm_stacking.py
 [stacking_07]:https://github.com/trtd56/VentilatorPressurePrediction/blob/5c8f2317926928c3c21971ef02b97e0f27d31358/src/ventilatorlstm_stacking.py
