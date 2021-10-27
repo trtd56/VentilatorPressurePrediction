@@ -27,7 +27,7 @@
 |exp136_drop_cont_v2|0.1669|||
 |[exp137_transformer_head]|0.1665|0.1545||
 |[exp138_classifiy]||||
-|[exp139_target_encoding]||||
+|[exp139_target_encoding]|0.1678|0.1557||
 |||||
 |stacking_01|0.1556|0.146|['exp086_mask', 'exp087_smooth_lag4', 'exp098_transformer', 'exp116_cnn']|
 |stacking_01|0.1556|0.148|mean_pp|
